@@ -12,6 +12,8 @@ model users {
   name         String   @db.VarChar(255)
   email        String   @db.VarChar(255)
   fone         String?  @db.VarChar(20)
+  cnpj         String?  @db.VarChar(255)
+  cpf          String?  @db.VarChar(14)
   password     String   @db.VarChar(255)
   confpassword String   @db.VarChar(255)
   created_at   DateTime @default(now()) @db.Timestamp(0)
