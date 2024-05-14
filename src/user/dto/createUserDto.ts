@@ -14,19 +14,19 @@ export class createUserDto {
 
     @IsStrongPassword({
         minLength: 4, 
-        minUppercase: 1, 
-        minSymbols: 1, 
+        minUppercase: 0 , 
+        minSymbols: 0, 
         minLowercase:0,
-        minNumbers:2
+        minNumbers:0
     }) 
     password: string;
 
     @IsStrongPassword({
         minLength: 4, 
-        minUppercase: 1, 
-        minSymbols: 1, 
+        minUppercase: 0, 
+        minSymbols: 0, 
         minLowercase:0,
-        minNumbers:2    
+        minNumbers: 0    
     }) 
     confpassword: string;
 }

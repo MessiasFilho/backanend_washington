@@ -1,13 +1,23 @@
 import { Body, Injectable } from "@nestjs/common";
 import { createUserDto } from "./dto/createUserDto";
 
+import { prismaService } from "src/prisma/prisma.service";
 
 @Injectable()
 export class userService {
-    async validatePassword( @Body() {password,confpassword}: createUserDto ){
-        
-        if (password != confpassword ){
-        return {Massege: 'password diferent'}
-      }
-    }
+  constructor(private prisma: prismaService ){} 
+  
+  async create( {name,email,fone,password,confpassword}:createUserDto){
+    return await this.prisma.users.create({
+      data: {
+        name,
+        email, 
+        fone, 
+        password, 
+        confpassword
+      },
+
+    })
+  }
+       
 }
