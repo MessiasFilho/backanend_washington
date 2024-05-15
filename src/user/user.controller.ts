@@ -1,7 +1,6 @@
 import { Body,Param ,Controller, Post,Get, Put, Patch, Delete, Req, Res, HttpException, HttpStatus } from "@nestjs/common";
 import { createUserDto } from "./dto/createUserDto";
 import { userService } from "./user.service";
-import {updatePatchUserDto} from "./dto/update-patch-dto"
 import { ParseIntPipe } from "@nestjs/common"
 import { createJury } from "./dto/createJuridDto";
 
@@ -36,25 +35,17 @@ export class userController{
     }
 
     @Put(':id')
-    async updateUser(@Body() user: createJury, @Param('id', ParseIntPipe ) id: number){
+    async updateUser(@Body() user: createUserDto, @Param('id', ParseIntPipe ) id: number){
         return this.userservice.updateUser(id, user)
     }
 
     @Patch(':id')
-    async updateParcialUser(@Body() {name,email,fone,password,confpassword}: updatePatchUserDto, @Param('id', ParseIntPipe ) id: number){
-        return {patch: {
-            name: name, 
-            email: email, 
-            fone: fone, 
-            password: password, 
-            confpassword: confpassword
-        }}
+    async updateParcialUser(@Body() user: createJury, @Param('id', ParseIntPipe ) id: number){
+        return this.userservice.updateJury(id, user)
     }
 
     @Delete(':id')
     async deleteUser(@Param('id', ParseIntPipe ) id: number){
-         return {
-            delete: id
-         }
+         return this.userservice.deleteUser(id)
     }
 }

@@ -42,6 +42,7 @@ export class userService {
  }
 
  async showUserId(id: number){
+
     const user = await this.prisma.users.findFirst({
       where: {
         id: id
@@ -53,16 +54,47 @@ export class userService {
     return user
  }
 
- async updateUser(id:number, user :createJury){
+ async updateUser(id:number, user :createUserDto){
+
   const use = await this.prisma.users.findUnique({
     where:{id}
   })
+
   if (!use){ 
     throw new NotFoundException('Usuario Não encontrado')
   }
+
   return this.prisma.users.update({
     where: {id}, 
     data: user
   })
+
+ }
+
+ async updateJury( id:number, body: createJury ){
+    const user = await this.prisma.users.findUnique({
+      where: {id}
+    })
+    if (!user){
+      throw new NotFoundException('Usuario não encontrado')
+    }
+    return this.prisma.users.update({
+      where:{id}, 
+      data: body
+
+    })
+ }
+ 
+ async deleteUser(id: number){
+    const user = await this.prisma.users.findUnique({
+      where: {id}
+    })
+    if (!user){
+      throw new NotFoundException('Usuario não encontrado')
+    }
+
+    return this.prisma.users.delete({
+      where:{id}
+    })
  }
 }
