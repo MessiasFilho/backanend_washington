@@ -8,9 +8,15 @@ export class createUserDto {
 
     @IsEmail()
     email: string
-    
+
+    @IsString()
+    pessoa: string
+
     @IsString()
     fone: string
+
+    @IsString()
+    cpf: string
 
     @IsStrongPassword({
         minLength: 4, 

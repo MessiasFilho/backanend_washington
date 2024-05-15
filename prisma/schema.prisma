@@ -11,6 +11,7 @@ model users {
   id           Int      @id @default(autoincrement())
   name         String   @db.VarChar(255)
   email        String   @db.VarChar(255)
+  pessoa       String   @db.VarChar(10)
   fone         String?  @db.VarChar(20)
   cnpj         String?  @db.VarChar(255)
   cpf          String?  @db.VarChar(14)

@@ -1,10 +1,9 @@
 import { Body,Param ,Controller, Post,Get, Put, Patch, Delete, Req, Res, HttpException, HttpStatus } from "@nestjs/common";
 import { createUserDto } from "./dto/createUserDto";
 import { userService } from "./user.service";
-import { updatePutUserDto } from "./dto/update-put-user";
 import {updatePatchUserDto} from "./dto/update-patch-dto"
 import { ParseIntPipe } from "@nestjs/common"
-import { error } from "console";
+import { createJury } from "./dto/createJuridDto";
 
 
 @Controller('users')
@@ -12,31 +11,33 @@ export class userController{
     constructor(private readonly userservice: userService ){}
 
     @Post()
-    async createUser(@Body() {name,email,fone,password,confpassword}: createUserDto){
+    async createUser(@Body() {name,email,pessoa,fone,cpf,password,confpassword}: createUserDto){
         if ( password !== confpassword){
              throw new HttpException('senhas diferentes', HttpStatus.BAD_REQUEST)
         }
-
-        return this.userservice.create({name,email,fone,password,confpassword})
+        return this.userservice.create({name,email,pessoa,fone, cpf, password,confpassword})
     }
+
+    @Post('legal')
+    async createLegalUser(@Body() {name,email,cnpj,pessoa,fone,cpf,password,confpassword}:createJury){
+        if ( password !== confpassword){
+            throw new HttpException('senhas diferentes', HttpStatus.BAD_REQUEST)
+       }
+       return this.userservice.createJuri({name,email,cnpj,pessoa,fone,cpf,password,confpassword})
+    }
+
     @Get()
     async showUsers(){
-        return {users: []}
+       return this.userservice.showUsers()
     }
     @Get(':id')
-    async oneUser(@Param() param ){
-        return {user:{param}}
+    async oneUser(@Param('id', ParseIntPipe) param: number ){
+        return this.userservice.showUserId(param)
     }
 
     @Put(':id')
-    async updateUser(@Body() {name,email,fone,password,confpassword}: updatePutUserDto, @Param('id', ParseIntPipe ) id: number){
-        return {put: {
-            name: name, 
-            email: email, 
-            fone: fone, 
-            password: password, 
-            confpassword: confpassword
-        }}
+    async updateUser(@Body() user: createJury, @Param('id', ParseIntPipe ) id: number){
+        return this.userservice.updateUser(id, user)
     }
 
     @Patch(':id')
