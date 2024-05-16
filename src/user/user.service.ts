@@ -1,6 +1,5 @@
-import { Body, Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { createUserDto } from "./dto/createUserDto";
-
 import { prismaService } from "src/prisma/prisma.service";
 import { createJury } from "./dto/createJuridDto";
 
@@ -43,7 +42,7 @@ export class userService {
 
  async showUserId(id: number){
 
-    const user = await this.prisma.users.findFirst({
+    const user = await this.prisma.users.findUnique({
       where: {
         id: id
       }

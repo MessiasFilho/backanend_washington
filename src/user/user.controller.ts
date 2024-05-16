@@ -1,14 +1,17 @@
-import { Body,Param ,Controller, Post,Get, Put, Patch, Delete, Req, Res, HttpException, HttpStatus } from "@nestjs/common";
+import { Body,Param ,Controller, Post,Get, Put, Patch, Delete, HttpException, HttpStatus, UseInterceptors } from "@nestjs/common";
 import { createUserDto } from "./dto/createUserDto";
 import { userService } from "./user.service";
 import { ParseIntPipe } from "@nestjs/common"
 import { createJury } from "./dto/createJuridDto";
+import { logInterceptor } from "src/interceptors/log.interceptor";
+import { ParamIdcuston } from "src/decorators/param-id.decorator";
 
-
+ @UseInterceptors(logInterceptor)
 @Controller('users')
 export class userController{ 
     constructor(private readonly userservice: userService ){}
 
+   
     @Post()
     async createUser(@Body() {name,email,pessoa,fone,cpf,password,confpassword}: createUserDto){
         if ( password !== confpassword){
@@ -29,8 +32,9 @@ export class userController{
     async showUsers(){
        return this.userservice.showUsers()
     }
+    //uso de parametro customizado
     @Get(':id')
-    async oneUser(@Param('id', ParseIntPipe) param: number ){
+    async oneUser(@ParamIdcuston() param: number ){
         return this.userservice.showUserId(param)
     }
 
