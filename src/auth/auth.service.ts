@@ -1,15 +1,42 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import {  users } from "@prisma/client";
+
 import { prismaService } from "src/prisma/prisma.service";
+import { createUserDto } from "src/user/dto/createUserDto";
+import { userService } from "src/user/user.service";
 
 @Injectable()
 export class AuthService {
-    constructor (private readonly jwtservice: JwtService, private readonly prisma: prismaService){   }
-    async createToken(){
-        // return this.jwtservice.sign()
+    constructor (private readonly jwtservice: JwtService,
+                 private readonly prisma: prismaService, 
+                 private readonly userService: userService   
+                ){   }
+    async createToken(user: users){
+         return { accessToken: this.jwtservice.sign({
+            id: user.id, 
+            name: user.name, 
+            email: user.email, 
+         }, {
+            expiresIn: '7 days', 
+            subject: String( user.id), 
+            issuer: 'login', 
+            audience:'users'
+         })
+
+         }
     }
-    async checkToken(){
-        // return this.jwtservice.verify()
+    
+    async checkToken(token: string){
+       try {
+           const data =  this.jwtservice.verify(token, {
+                audience: 'users', 
+                issuer: 'login',
+           })
+           return data
+       } catch(e){
+            throw new BadRequestException(e)
+       }
     }
 
     async login(email: string , password: string ){
@@ -22,7 +49,7 @@ export class AuthService {
         if (!user){
             throw new NotFoundException('Email ou Senha incorreta ')
         }
-        return user 
+        return this.createToken(user) 
     }
     
     async forget(email: string ){
@@ -40,15 +67,19 @@ export class AuthService {
     }
     
     async reset( password: string,  token: string ){
-        //to do validar o token.......
         const id = 5 
-        await this.prisma.users.update({
+        const user = await this.prisma.users.update({
             where:{id}, 
             data:{
                 password
             }
         })
-        return true
+        return this.createToken(user)
+    }
+
+    async register ( data: createUserDto ){
+        const user = await this.userService.create(data)
+        return this.createToken(user)
     }
     
 }
