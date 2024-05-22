@@ -6,8 +6,7 @@ import { authResetDto } from "./dto/auth-reset-dto";
 import { userService } from "src/user/user.service";
 import { AuthService } from "./auth.service";
 import { AuthGuard } from "src/guard/auth.guard";
-
-
+import { userDecorator } from "src/decorators/user-decorator";
 
 @Controller('auth')
 export class AuthController {
@@ -35,10 +34,11 @@ export class AuthController {
     async reset (@Body() {password, token}: authResetDto){
         // return this.auth.reset(password, token)
     }
+
     @UseGuards(AuthGuard)
     @Post('teste')
-    async teste(@Request() req){
-         return { data: req.tokenPayload}
+    async teste(@userDecorator('password') user){
+         return { user }
 
     }
 }

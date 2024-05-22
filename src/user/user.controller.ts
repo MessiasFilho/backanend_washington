@@ -21,7 +21,7 @@ export class userController{
     }
 
     @Post('legal')
-    async createLegalUser(@Body() {name,email,cnpj,pessoa,fone,cpf,password,confpassword}:createJury){
+        async createLegalUser(@Body() {name,email,cnpj,pessoa,fone,cpf,password,confpassword}:createJury){
         if ( password !== confpassword){
             throw new HttpException('senhas diferentes', HttpStatus.BAD_REQUEST)
        }
@@ -34,22 +34,22 @@ export class userController{
     }
     //uso de parametro customizado
     @Get(':id')
-    async oneUser(@ParamIdcuston() param: number ){
+        async oneUser(@ParamIdcuston() param: number ){
         return this.userservice.showUserId(param)
     }
 
     @Put(':id')
-    async updateUser(@Body() user: createUserDto, @Param('id', ParseIntPipe ) id: number){
+        async updateUser(@Body() user: createUserDto, @Param('id', ParseIntPipe ) id: number){
         return this.userservice.updateUser(id, user)
     }
 
     @Patch(':id')
-    async updateParcialUser(@Body() user: createJury, @Param('id', ParseIntPipe ) id: number){
+        async updateParcialUser(@Body() user: createJury, @Param('id', ParseIntPipe ) id: number){
         return this.userservice.updateJury(id, user)
     }
 
     @Delete(':id')
-    async deleteUser(@Param('id', ParseIntPipe ) id: number){
+        async deleteUser(@Param('id', ParseIntPipe ) id: number){
          return this.userservice.deleteUser(id)
     }
 }

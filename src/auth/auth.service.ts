@@ -11,7 +11,8 @@ export class AuthService {
     constructor (private readonly jwtservice: JwtService,
                  private readonly prisma: prismaService, 
                  private readonly userService: userService   
-                ){   }
+                ){}
+                
      createToken(user: users){
          return { accessToken: this.jwtservice.sign({
             id: user.id, 
