@@ -5,6 +5,7 @@ import { userModule } from "src/user/user.module";
 import { prismaModule } from "src/prisma/prisma.module";
 import { AuthService } from "./auth.service";
 import { userService } from "src/user/user.service";
+import { AuthGuard } from "src/guard/auth.guard";
 
 @Module({
     exports:[],
@@ -12,7 +13,7 @@ import { userService } from "src/user/user.service";
         secret:'I;fb>oATk}l_KJG91.7Y$9T*IC1&Yb2#'
     }),
     userModule, 
-    prismaModule
+    prismaModule, 
     ], 
     providers:[AuthService], 
     controllers:[AuthController]
