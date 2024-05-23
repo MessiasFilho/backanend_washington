@@ -37,7 +37,11 @@ export class userService {
   }
 
  async showUsers(){
-    return this.prisma.users.findMany()
+    const users = await this.prisma.users.findMany({
+      include: {agedas: true}
+    })
+    return users
+
  }
 
  async showUserId(id: number){
@@ -50,6 +54,8 @@ export class userService {
     if (!user){
       throw new NotFoundException('Usuario não encontrado')
     }
+
+
     return user
  }
 

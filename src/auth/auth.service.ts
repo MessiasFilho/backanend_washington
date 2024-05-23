@@ -5,6 +5,8 @@ import {  users } from "@prisma/client";
 import { prismaService } from "src/prisma/prisma.service";
 import { createUserDto } from "src/user/dto/createUserDto";
 import { userService } from "src/user/user.service";
+import { agendarDto } from "./dto/auth-agenda-dto";
+import { log } from "console";
 
 @Injectable()
 export class AuthService {
@@ -91,6 +93,25 @@ export class AuthService {
     async register ( data: createUserDto ){
         const user = await this.userService.create(data)
         return this.createToken(user)
+    }
+
+    async agendar (ageda: agendarDto ){
+        const id = ageda.userID
+        const user = await  this.prisma.users.findFirst({
+            where: {id}
+        })
+        console.log({user});
+        
+        if (!user){
+            
+            throw new NotFoundException('User não foi encontrado')
+        }
+
+        return this.prisma.agenda.create({
+            data: {
+                date: String(ageda.date), userId: user.id
+            }
+        })
     }
     
 }
