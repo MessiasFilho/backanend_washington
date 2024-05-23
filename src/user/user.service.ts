@@ -1,14 +1,27 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { createUserDto } from "./dto/createUserDto";
 import { prismaService } from "src/prisma/prisma.service";
 import { createJury } from "./dto/createJuridDto";
+import { adminDto } from "./dto/createAdminDto";
+
 
 @Injectable()
 export class userService {
   constructor(private prisma: prismaService ){} 
   
   async create( {name,email,pessoa ,fone,cpf, password,confpassword}: createUserDto){
-    return await this.prisma.users.create({
+    
+    const user = await this.prisma.users.findFirst({
+      where:{
+        email,cpf
+      }
+    })
+
+    if (user){
+      throw new HttpException('usuario já existe ', HttpStatus.BAD_REQUEST)
+    }
+
+    return this.prisma.users.create({
       data: {
         name,
         email, 
@@ -36,12 +49,26 @@ export class userService {
     })
   }
 
+  async createAdmin( {name,email,pessoa,fone,confpassword,cpf,password, role}:adminDto){
+    return this.prisma.users.create({
+      data: {
+        name, 
+        email,
+        pessoa, 
+        fone,
+        role,
+        cpf,
+        password,
+        confpassword,
+      }
+    })
+  }
+
  async showUsers(){
     const users = await this.prisma.users.findMany({
       include: {agedas: true}
     })
     return users
-
  }
 
  async showUserId(id: number){

@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Headers, UseGuards, Param, ParseIntPipe } from "@nestjs/common";
+import { Body, Controller, Post, Get, Headers, UseGuards, HttpException, HttpStatus } from "@nestjs/common";
 import { loginDto } from "./dto/auth-login-dto";
 import { registerDTO } from "./dto/auth-register-dto";
 import { forgetDTO } from "./dto/auth-forget-dto";
@@ -24,6 +24,9 @@ export class AuthController {
 
     @Post('register')
     async register (@Body() body: registerDTO){
+        if ( body.password !== body.confpassword){
+                    throw new HttpException('senhas diferentes', HttpStatus.BAD_REQUEST)
+            }
         return this.userservice.create(body)
     }
 

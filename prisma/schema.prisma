@@ -12,7 +12,7 @@ model users {
   name         String   @db.VarChar(255)
   email        String   @db.VarChar(255)
   pessoa       String   @db.VarChar(10)
-  admin        String   @default("users") 
+  role         String   @default("users")
   fone         String?  @db.VarChar(20)
   cnpj         String?  @db.VarChar(255)
   cpf          String?  @db.VarChar(14)
