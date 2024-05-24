@@ -37,6 +37,12 @@ export class AuthController {
        return this.authservice.agendar(body, id)
     }
 
+    @UseGuards(AuthGuard)
+    @Get()
+    async userAuth (@Request() req){
+        return req.user
+    } 
+
     @Post('forget')
     async forget(@Body() {email}: forgetDTO){
         // return this.auth.forget(email)
