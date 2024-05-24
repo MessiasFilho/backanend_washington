@@ -95,15 +95,12 @@ export class AuthService {
         return this.createToken(user)
     }
 
-    async agendar (ageda: agendarDto ){
-        const id = ageda.userID
+    async agendar (ageda: agendarDto, id: number ){
         const user = await  this.prisma.users.findFirst({
             where: {id}
         })
         console.log({user});
-        
         if (!user){
-            
             throw new NotFoundException('User não foi encontrado')
         }
 

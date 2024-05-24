@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Headers, UseGuards, HttpException, HttpStatus } from "@nestjs/common";
+import { Body, Controller, Post, Get, Headers, Request, UseGuards, HttpException, HttpStatus } from "@nestjs/common";
 import { loginDto } from "./dto/auth-login-dto";
 import { registerDTO } from "./dto/auth-register-dto";
 import { forgetDTO } from "./dto/auth-forget-dto";
@@ -9,6 +9,7 @@ import { AuthGuard } from "src/guard/auth.guard";
 import { userDecorator } from "src/decorators/user-decorator";
 
 import { agendarDto } from "./dto/auth-agenda-dto";
+
 
 @Controller('auth')
 export class AuthController {
@@ -30,9 +31,10 @@ export class AuthController {
         return this.userservice.create(body)
     }
 
+    @UseGuards(AuthGuard)
     @Post('agendar')
-    async agendar (@Body() agenda: agendarDto ){
-        return this.authservice.agendar(agenda)
+    async agendar (@userDecorator('id') id , @Body() body :agendarDto  ){
+       return this.authservice.agendar(body, id)
     }
 
     @Post('forget')
@@ -45,12 +47,10 @@ export class AuthController {
         // return this.auth.reset(password, token)
     }
 
-    
-
     @UseGuards(AuthGuard)
     @Post('teste')
-    async teste(@userDecorator('password') user){
-         return { user }
+    async teste(@userDecorator('password') user, @Request() req ){
+        
 
     }
 }
