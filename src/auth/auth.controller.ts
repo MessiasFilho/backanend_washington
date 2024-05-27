@@ -30,13 +30,7 @@ export class AuthController {
         return this.authservice.register(body)
     }
 
-    // @Post('juryregister')
-    // async registerJury(@Body() body:createJuryDto ){
-    //     if ( body.password !== body.confpassword){
-    //         throw new HttpException('senhas diferentes', HttpStatus.BAD_REQUEST)
-    //     }
-    //     return this.userservice.createJuri(body) 
-    // }
+   
 
 
     @UseGuards(AuthGuard)
@@ -56,6 +50,12 @@ export class AuthController {
     async userAuth (@Request() req){
         return req.user
     } 
+
+    @UseGuards(AuthGuard)
+    @Get('showusers')
+    async showUsers (){
+        return this.authservice.showUsers()
+    }
 
     @Post('forget')
     async forget(@Body() {email}: forgetDTO){

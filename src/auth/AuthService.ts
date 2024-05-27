@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from "@nestjs/common";
+import { Injectable, BadRequestException, NotFoundException, HttpException, HttpStatus } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { users } from "@prisma/client";
 import { prismaService } from "src/prisma/prisma.service";
@@ -6,6 +6,7 @@ import { createUserDto } from "src/user/dto/createUserDto";
 import { userService } from "src/user/user.service";
 import { agendarDto } from "./dto/auth-agenda-dto";
 import { registerDTO } from "./dto/auth-register-dto";
+import e from "express";
 
 @Injectable()
 export class AuthService {
@@ -77,6 +78,11 @@ export class AuthService {
         //enviar o email 
         return true;
     }
+    async showUsers(){
+       return this.prisma.users.findMany({
+        include: {agedas: true}
+       })
+    }
 
     async reset(password: string, token: string) {
         const id = 5;
@@ -89,9 +95,51 @@ export class AuthService {
         return this.createToken(user);
     }
 
-    async register(data: registerDTO) {
-        const user = await this.userService.create(data);
-        return this.createToken(user);
+    async register({name,email,pessoa, cnpj ,fone,cpf, password,confpassword}: registerDTO) {
+        
+        const cpfuser = await this.prisma.users.findFirst({
+            where:{cpf}
+          })
+        const emailuser = await this.prisma.users.findFirst({
+            where:{
+                email: email
+            }
+          })
+        const cnpjuser = await this.prisma.users.findFirst({
+            where:{
+                cnpj: cnpj,
+            }
+          })
+
+          if (cpfuser){
+             const resp = new HttpException('CPF Já Cadastrado', HttpStatus.BAD_REQUEST)
+                return {valid: false, resp}
+            }
+          if (emailuser){
+             const resp = new HttpException('email Já Cadastrado', HttpStatus.BAD_REQUEST)
+                return {valid: false, resp}
+            }
+          if (cnpjuser){
+             const resp = new HttpException('CNPJ Já Cadastrado', HttpStatus.BAD_REQUEST)
+                return {valid: false, resp}
+            }
+          
+          
+       
+        await this.prisma.users.create({
+        data:{
+            name, 
+            email,
+            pessoa,
+            cnpj: cnpj === '' ? null : cnpj, 
+            fone,
+            cpf: cpf === '' ? null : cpf,   
+            password, 
+            confpassword
+        }
+       })
+
+       return { message: 'Usuario Criado com sucesso', valid: true }
     }
 
     async agendar( agend: agendarDto, user ) {
