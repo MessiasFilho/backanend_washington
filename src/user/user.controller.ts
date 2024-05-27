@@ -1,10 +1,11 @@
-import { Body,Param ,Controller, Post,Get, Put, Patch, Delete, HttpException, HttpStatus, UseInterceptors } from "@nestjs/common";
+import { Body,Param ,Controller, Post,Get, Put, Patch, Delete, HttpException, HttpStatus, UseInterceptors, UseGuards } from "@nestjs/common";
 import { createUserDto } from "./dto/createUserDto";
 import { userService } from "./user.service";
 import { ParseIntPipe } from "@nestjs/common"
-import { createJury } from "./dto/createJuridDto";
+import { createJuryDto } from "./dto/createJuridDto";
 import { logInterceptor } from "src/interceptors/log.interceptor";
 import { ParamIdcuston } from "src/decorators/param-id.decorator";
+import { AuthGuard } from "src/guard/auth.guard";
 
  @UseInterceptors(logInterceptor)
 @Controller('users')
@@ -28,7 +29,8 @@ export class userController{
     //    return this.userservice.createJuri({name,email,cnpj,pessoa,fone,cpf,password,confpassword, admin})
     // }
 
-    @Get()
+    // @UseGuards(AuthGuard)
+    @Get('showUsers')
     async showUsers(){
        return this.userservice.showUsers()
     }
@@ -44,7 +46,7 @@ export class userController{
     }
 
     @Patch(':id')
-        async updateParcialUser(@Body() user: createJury, @Param('id', ParseIntPipe ) id: number){
+        async updateParcialUser(@Body() user: createJuryDto, @Param('id', ParseIntPipe ) id: number){
         return this.userservice.updateJury(id, user)
     }
 

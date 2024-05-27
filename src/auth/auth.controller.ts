@@ -4,11 +4,12 @@ import { registerDTO } from "./dto/auth-register-dto";
 import { forgetDTO } from "./dto/auth-forget-dto";
 import { authResetDto } from "./dto/auth-reset-dto";
 import { userService } from "src/user/user.service";
-import { AuthService } from "./auth.service";
+import { AuthService } from "./AuthService";
 import { AuthGuard } from "src/guard/auth.guard";
 import { userDecorator } from "src/decorators/user-decorator";
 
 import { agendarDto } from "./dto/auth-agenda-dto";
+import { createJuryDto } from "src/user/dto/createJuridDto";
 
 
 @Controller('auth')
@@ -31,10 +32,25 @@ export class AuthController {
         return this.userservice.create(body)
     }
 
+    // @Post('juryregister')
+    // async registerJury(@Body() body:createJuryDto ){
+    //     if ( body.password !== body.confpassword){
+    //         throw new HttpException('senhas diferentes', HttpStatus.BAD_REQUEST)
+    //     }
+    //     return this.userservice.createJuri(body) 
+    // }
+
+
     @UseGuards(AuthGuard)
     @Post('agendar')
-    async agendar (@userDecorator('id') id , @Body() body :agendarDto  ){
-       return this.authservice.agendar(body, id)
+    async agendar (@Request() req,  @Body() body :agendarDto  ){
+       return this.authservice.agendar(body, req.user )
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('listagenda')
+    async listAgendas(){
+        return this.authservice.showAgenda()
     }
 
     @UseGuards(AuthGuard)
@@ -56,7 +72,6 @@ export class AuthController {
     @UseGuards(AuthGuard)
     @Post('teste')
     async teste(@userDecorator('password') user, @Request() req ){
-        
-
+        return {data: req.user}
     }
 }

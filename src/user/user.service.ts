@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { createUserDto } from "./dto/createUserDto";
 import { prismaService } from "src/prisma/prisma.service";
-import { createJury } from "./dto/createJuridDto";
+import { createJuryDto } from "./dto/createJuridDto";
 import { adminDto } from "./dto/createAdminDto";
 
 
@@ -34,7 +34,7 @@ export class userService {
     })
   }
 
-  async createJuri( {name,email,pessoa,fone,cnpj,confpassword,cpf,password}:createJury){
+  async createJuri( {name,email,pessoa,fone,cnpj,confpassword,cpf,password}:createJuryDto){
     return this.prisma.users.create({
       data: {
         name, 
@@ -49,25 +49,28 @@ export class userService {
     })
   }
 
-  async createAdmin( {name,email,pessoa,fone,confpassword,cpf,password, role}:adminDto){
-    return this.prisma.users.create({
-      data: {
-        name, 
-        email,
-        pessoa, 
-        fone,
-        role,
-        cpf,
-        password,
-        confpassword,
-      }
-    })
-  }
+  // async createAdmin( {name,email,pessoa,fone,confpassword,cpf,password, role}:adminDto){
+  //   return this.prisma.users.create({
+  //     data: {
+  //       name, 
+  //       email,
+  //       pessoa, 
+  //       fone,
+  //       role,
+  //       cpf,
+  //       password,
+  //       confpassword,
+  //     }
+  //   })
+  // }
 
  async showUsers(){
     const users = await this.prisma.users.findMany({
-      include: {agedas: true}
+      include: {
+        agedas: true
+      }
     })
+
     return users
  }
 
@@ -103,7 +106,7 @@ export class userService {
 
  }
 
- async updateJury( id:number, body: createJury ){
+ async updateJury( id:number, body: createJuryDto ){
     const user = await this.prisma.users.findUnique({
       where: {id}
     })

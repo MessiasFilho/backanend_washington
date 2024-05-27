@@ -20,15 +20,16 @@ model users {
   confpassword String   @db.VarChar(255)
   created_at   DateTime @default(now()) @db.Timestamp(0)
   updated_at   DateTime @default(now()) @db.Timestamp(0)
-  agedas       Agenda[]  
+  agedas        Agenda[]  
 }
 
-model Agenda{
-  id Int @id @default(autoincrement())
-  userId Int
-  date DateTime @unique
-  screated_at   DateTime @default(now()) @db.Timestamp(0)
-  updated_at   DateTime @default(now()) @db.Timestamp(0)
-  user users @relation(fields: [userId], references: [id], onDelete:Cascade)
+model Agenda {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  name        String   @db.VarChar(255)
+  date        DateTime @unique()
+  screated_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @default(now()) @db.Timestamp(0)
+  user        users @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, date])
 }
