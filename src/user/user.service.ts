@@ -3,13 +3,14 @@ import { createUserDto } from "./dto/createUserDto";
 import { prismaService } from "src/prisma/prisma.service";
 import { createJuryDto } from "./dto/createJuridDto";
 import { adminDto } from "./dto/createAdminDto";
+import { registerDTO } from "src/auth/dto/auth-register-dto";
 
 
 @Injectable()
 export class userService {
   constructor(private prisma: prismaService ){} 
   
-  async create( {name,email,pessoa ,fone,cpf, password,confpassword}: createUserDto){
+  async create( {name,email,pessoa, cnpj ,fone,cpf, password,confpassword}: registerDTO ){
     
     const user = await this.prisma.users.findFirst({
       where:{
@@ -27,6 +28,7 @@ export class userService {
         email, 
         pessoa,
         fone, 
+        cnpj,
         cpf,
         password, 
         confpassword
@@ -34,21 +36,7 @@ export class userService {
     })
   }
 
-  async createJuri( {name,email,pessoa,fone,cnpj,confpassword,cpf,password}:createJuryDto){
-    return this.prisma.users.create({
-      data: {
-        name, 
-        email,
-        pessoa, 
-        cnpj, 
-        fone,
-        cpf,
-        password,
-        confpassword,
-      }
-    })
-  }
-
+ 
   // async createAdmin( {name,email,pessoa,fone,confpassword,cpf,password, role}:adminDto){
   //   return this.prisma.users.create({
   //     data: {

@@ -5,6 +5,7 @@ import { prismaService } from "src/prisma/prisma.service";
 import { createUserDto } from "src/user/dto/createUserDto";
 import { userService } from "src/user/user.service";
 import { agendarDto } from "./dto/auth-agenda-dto";
+import { registerDTO } from "./dto/auth-register-dto";
 
 @Injectable()
 export class AuthService {
@@ -88,7 +89,7 @@ export class AuthService {
         return this.createToken(user);
     }
 
-    async register(data: createUserDto) {
+    async register(data: registerDTO) {
         const user = await this.userService.create(data);
         return this.createToken(user);
     }

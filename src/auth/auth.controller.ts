@@ -9,8 +9,6 @@ import { AuthGuard } from "src/guard/auth.guard";
 import { userDecorator } from "src/decorators/user-decorator";
 
 import { agendarDto } from "./dto/auth-agenda-dto";
-import { createJuryDto } from "src/user/dto/createJuridDto";
-
 
 @Controller('auth')
 export class AuthController {
@@ -29,7 +27,7 @@ export class AuthController {
         if ( body.password !== body.confpassword){
                     throw new HttpException('senhas diferentes', HttpStatus.BAD_REQUEST)
             }
-        return this.userservice.create(body)
+        return this.authservice.register(body)
     }
 
     // @Post('juryregister')
