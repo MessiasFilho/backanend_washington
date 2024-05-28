@@ -6,8 +6,12 @@ import { createUserDto } from "src/user/dto/createUserDto";
 import { userService } from "src/user/user.service";
 import { agendarDto } from "./dto/auth-agenda-dto";
 import { registerDTO } from "./dto/auth-register-dto";
-import e from "express";
-import { addHours, isAfter, isBefore, parseISO, setHours, startOfToday, subHours } from "date-fns";
+import { fromZonedTime } from 'date-fns-tz';
+import { addHours, isAfter, isBefore, parse, parseISO, setHours, setMinutes, setSeconds, startOfToday, subHours} from "date-fns";
+const { listTimeZones } = require('timezone-support')
+import { parseFromTimeZone, formatToTimeZone,convertToLocalTime,convertToTimeZone  } from "date-fns-timezone";
+import { agent } from "supertest";
+
 
 @Injectable()
 export class AuthService {
@@ -142,50 +146,48 @@ export class AuthService {
 
        return { message: 'Usuario Criado com sucesso', valid: true }
     }
+    // d.M.YYYY HH:mm:ss.SSS [GMT]Z (z)
+    agendaUtf (agend: string) {
+        const format = "d.M.yyyy HH:mm:ss.SSS 'GMT'XXX (z)"
+        const formatUtf8 = 'YYYY-MM-ddTHH:mm:ssZ'
+        const horaCorrectUtf = formatToTimeZone( agend, formatUtf8, {timeZone:'America/Fortaleza'} )
+        
+        const parceDate = parse(horaCorrectUtf, format, new Date())
+        // const formatutf = "yyyy-MM-dd'T'HH:mm:ss.SSSX"
+        // const endPointDate = formatToTimeZone( agend, format, {timeZone:'America/Fortaleza'} )
+        // const startHour = formatToTimeZone(String(setHours(startOfToday(), 7)), format, {timeZone:'America/Fortaleza' });
+        const endHour = String(setHours(startOfToday(), 20));
+        // if (isNaN(parceDate)) {
+        //     throw new Error('Invalid date format');
+        //   }
+        
+        return {info :horaCorrectUtf}
+    }
+
+    convertISO(){
+
+    }
 
     async agendar( agend: agendarDto, user ) {
        
         try {
             const now = new Date()
-            const endPointDate = new Date(agend.date)
-            console.log(endPointDate);
+            console.log( 'Antes de formatar',parseISO(agend.date));
+            const {info} = this.agendaUtf(agend.date)
+            console.log('apos formatar', info);
+            const startHour = String(setHours(startOfToday(), 7));
+            const endHour = String(setHours(startOfToday(), 20));
             
-            const startHour = setHours(startOfToday(), 7)
-            const endHour = setHours(startOfToday(), 20)
-    
-    
-            //verificar se a data do comprommiso e no passado 
-            if (isBefore(endPointDate, now)){
-                throw new HttpException('Voce e um viajante do tempo ? ', HttpStatus.BAD_REQUEST)
-            }
-    
-            if (isBefore(endPointDate, startHour)){
-                throw new HttpException('Hora fora do expediente de funcionamendto do prédio', HttpStatus.BAD_REQUEST)
-            }
-
-            if (isAfter(endPointDate, endHour)){
-                throw new HttpException('Hora fora do expediente de funcionamendto do prédio', HttpStatus.BAD_REQUEST)
-
-            }
+            // console.log('hora Inicial', startHour,' hora final', endHour, 'info', info);
+            console.log('info', info);
             
-            // const conflictingAgend = await this.prisma.agenda.findMany({
-            //     where:{
-            //         userId: user.id, 
-            //         date: {
-            //             gte: subHours(endPointDate, 2),
-            //             lte: addHours(endPointDate, 2)
-            //         }
-            //     }
-            // })
-
-            // if (conflictingAgend.some(agenda => Math.abs(endPointDate.getTime() - new Date(agenda.date).getTime()) < 3600000)){
-            //     throw new HttpException('Cada compromisso deve ter um intervalo mínimo de 1 hora e máximo de 2 horas de outros compromissos.', HttpStatus.BAD_REQUEST)
-            // }
+            
+          
     
             // return this.prisma.agenda.create({
             //     data:{
             //         userId: user.id, 
-            //         date: new Date(agend.date), 
+            //         date: new Date(info), 
             //         name: user.name
             //     }
             // })
