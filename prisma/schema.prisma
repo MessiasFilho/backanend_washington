@@ -9,12 +9,12 @@ datasource db {
 
 model users {
   id           Int      @id @default(autoincrement())
-  name         String   @db.VarChar(255)
-  email        String   @db.VarChar(255) @unique()
+  name         String   @db.VarChar(191)
+  email        String   @db.VarChar(191) @unique()
   pessoa       String   @db.VarChar(10)
   role         String   @default("users")
   fone         String?  @db.VarChar(20)
-  cnpj         String?  @db.VarChar(255) @unique()
+  cnpj         String?  @db.VarChar(191) @unique()
   cpf          String?  @db.VarChar(14)  @unique()
   password     String   @db.VarChar(255)
   confpassword String   @db.VarChar(255)
@@ -26,7 +26,7 @@ model users {
 model Agenda {
   id          Int      @id @default(autoincrement())
   userId      Int
-  name        String   @db.VarChar(255)
+  name        String   @db.VarChar(191)
   date        DateTime @unique()
   screated_at DateTime @default(now()) @db.Timestamp(0)
   updated_at  DateTime @default(now()) @db.Timestamp(0)

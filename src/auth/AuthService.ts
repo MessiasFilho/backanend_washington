@@ -7,6 +7,7 @@ import { userService } from "src/user/user.service";
 import { agendarDto } from "./dto/auth-agenda-dto";
 import { registerDTO } from "./dto/auth-register-dto";
 import e from "express";
+import { addHours, isAfter, isBefore, parseISO, setHours, startOfToday, subHours } from "date-fns";
 
 @Injectable()
 export class AuthService {
@@ -144,13 +145,60 @@ export class AuthService {
 
     async agendar( agend: agendarDto, user ) {
        
-        return this.prisma.agenda.create({
-            data:{
-                userId: user.id, 
-                date: new Date(agend.date), 
-                name: user.name
+        try {
+            const now = new Date()
+            const endPointDate = new Date(agend.date)
+            console.log(endPointDate);
+            
+            const startHour = setHours(startOfToday(), 7)
+            const endHour = setHours(startOfToday(), 20)
+    
+    
+            //verificar se a data do comprommiso e no passado 
+            if (isBefore(endPointDate, now)){
+                throw new HttpException('Voce e um viajante do tempo ? ', HttpStatus.BAD_REQUEST)
             }
-        })
+    
+            if (isBefore(endPointDate, startHour)){
+                throw new HttpException('Hora fora do expediente de funcionamendto do prédio', HttpStatus.BAD_REQUEST)
+            }
+
+            if (isAfter(endPointDate, endHour)){
+                throw new HttpException('Hora fora do expediente de funcionamendto do prédio', HttpStatus.BAD_REQUEST)
+
+            }
+            
+            // const conflictingAgend = await this.prisma.agenda.findMany({
+            //     where:{
+            //         userId: user.id, 
+            //         date: {
+            //             gte: subHours(endPointDate, 2),
+            //             lte: addHours(endPointDate, 2)
+            //         }
+            //     }
+            // })
+
+            // if (conflictingAgend.some(agenda => Math.abs(endPointDate.getTime() - new Date(agenda.date).getTime()) < 3600000)){
+            //     throw new HttpException('Cada compromisso deve ter um intervalo mínimo de 1 hora e máximo de 2 horas de outros compromissos.', HttpStatus.BAD_REQUEST)
+            // }
+    
+            // return this.prisma.agenda.create({
+            //     data:{
+            //         userId: user.id, 
+            //         date: new Date(agend.date), 
+            //         name: user.name
+            //     }
+            // })
+
+
+        }catch(error){
+            throw new HttpException('Erro ao criar compromisso', HttpStatus.BAD_REQUEST,{ cause: 'teste'})
+        }
+      
+       
+
+      
+    
     }
 
     async showAgenda() {
