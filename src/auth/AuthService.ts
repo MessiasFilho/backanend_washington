@@ -6,8 +6,8 @@ import { createUserDto } from "src/user/dto/createUserDto";
 import { userService } from "src/user/user.service";
 import { agendarDto } from "./dto/auth-agenda-dto";
 import { registerDTO } from "./dto/auth-register-dto";
-import { fromZonedTime } from 'date-fns-tz';
-import { addHours, isAfter, isBefore, parse, parseISO, setHours, setMinutes, setSeconds, startOfToday, subHours} from "date-fns";
+import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
+import { addHours, isAfter, isBefore, parse, parseISO, setHours, setMilliseconds, setMinutes, setSeconds, startOfToday, subHours} from "date-fns";
 const { listTimeZones } = require('timezone-support')
 import { parseFromTimeZone, formatToTimeZone,convertToLocalTime,convertToTimeZone  } from "date-fns-timezone";
 import { agent } from "supertest";
@@ -147,21 +147,14 @@ export class AuthService {
        return { message: 'Usuario Criado com sucesso', valid: true }
     }
     // d.M.YYYY HH:mm:ss.SSS [GMT]Z (z)
-    agendaUtf (agend: string) {
-        const format = "d.M.yyyy HH:mm:ss.SSS 'GMT'XXX (z)"
-        const formatUtf8 = 'YYYY-MM-ddTHH:mm:ssZ'
-        const horaCorrectUtf = formatToTimeZone( agend, formatUtf8, {timeZone:'America/Fortaleza'} )
-        
-        const parceDate = parse(horaCorrectUtf, format, new Date())
-        // const formatutf = "yyyy-MM-dd'T'HH:mm:ss.SSSX"
-        // const endPointDate = formatToTimeZone( agend, format, {timeZone:'America/Fortaleza'} )
-        // const startHour = formatToTimeZone(String(setHours(startOfToday(), 7)), format, {timeZone:'America/Fortaleza' });
-        const endHour = String(setHours(startOfToday(), 20));
-        // if (isNaN(parceDate)) {
-        //     throw new Error('Invalid date format');
-        //   }
-        
-        return {info :horaCorrectUtf}
+    agendaUtf (agend: agendarDto) {
+        const formatUtf8 = "YYYY-MM-DDTHH:mm"
+        const zone = 'America/Fortaleza'
+        const horaCorrectUtf = formatToTimeZone( agend.date, formatUtf8, {timeZone: zone} )
+        const startHour = formatToTimeZone(setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 7), formatUtf8, {timeZone:zone });
+        const endHour = formatToTimeZone(setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 18), formatUtf8, {timeZone: zone} );
+        const now = formatToTimeZone(new Date(), formatUtf8, {timeZone: zone})
+        return {userDate :horaCorrectUtf, startHour: startHour, endHour: endHour, now: now }
     }
 
     convertISO(){
@@ -170,44 +163,50 @@ export class AuthService {
 
     async agendar( agend: agendarDto, user ) {
        
-        try {
-            const now = new Date()
-            console.log( 'Antes de formatar',parseISO(agend.date));
-            const {info} = this.agendaUtf(agend.date)
-            console.log('apos formatar', info);
-            const startHour = String(setHours(startOfToday(), 7));
-            const endHour = String(setHours(startOfToday(), 20));
-            
-            // console.log('hora Inicial', startHour,' hora final', endHour, 'info', info);
-            console.log('info', info);
-            
-            
-          
-    
-            // return this.prisma.agenda.create({
-            //     data:{
-            //         userId: user.id, 
-            //         date: new Date(info), 
-            //         name: user.name
-            //     }
-            // })
-
-
-        }catch(error){
-            throw new HttpException('Erro ao criar compromisso', HttpStatus.BAD_REQUEST,{ cause: 'teste'})
-        }
-      
        
+            const{ userDate, startHour, endHour,  now} = this.agendaUtf(agend)
+           
+            if (isBefore( userDate, now )){
+                throw new HttpException('Voçe e um viajate do tempo?', HttpStatus.BAD_REQUEST,{cause: 'Voçe marcou antes da data ou hora atual'} )
+            }
 
-      
-    
+            if (isBefore(userDate, startHour) ){
+                throw new HttpException('funcionameto apois as 7:00', HttpStatus.BAD_REQUEST,{cause: 'Voçe Marcou para entes das 7:00'} )
+            }
+            if (isAfter(userDate, endHour)){
+                throw new HttpException('funcionameto ate as 16:00', HttpStatus.BAD_REQUEST,{cause: 'Voçe Marcou para entes das 7:00'} )
+            }
+
+
+            const conflict = await this.prisma.agenda.findMany({
+                where:{
+                    date:{
+                        gte: subHours(userDate, 2), 
+                        lte: addHours(userDate, 2)
+                    }
+                }
+            })
+
+            console.log( conflict , );
+            
+            return this.prisma.agenda.create({
+                data:{
+                    userId: user.id, 
+                    date: userDate, 
+                    name: user.name
+                }
+            })
+
+
+       
     }
 
     async showAgenda() {
        const agenda = await this.prisma.agenda.findMany({
         
        })  
-       return agenda 
+
+       return 
     }
 
 }
