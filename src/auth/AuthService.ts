@@ -6,12 +6,9 @@ import { createUserDto } from "src/user/dto/createUserDto";
 import { userService } from "src/user/user.service";
 import { agendarDto } from "./dto/auth-agenda-dto";
 import { registerDTO } from "./dto/auth-register-dto";
-import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
-import { addHours, isAfter, isBefore, parse, parseISO, setHours, setMilliseconds, setMinutes, setSeconds, startOfToday, subHours} from "date-fns";
+import { isAfter, isBefore, parseISO, setHours, setMilliseconds, setMinutes, setSeconds} from "date-fns";
 const { listTimeZones } = require('timezone-support')
-import { parseFromTimeZone, formatToTimeZone,convertToLocalTime,convertToTimeZone  } from "date-fns-timezone";
-import { agent } from "supertest";
-
+import {  formatToTimeZone} from "date-fns-timezone";
 
 @Injectable()
 export class AuthService {
@@ -83,6 +80,7 @@ export class AuthService {
         //enviar o email 
         return true;
     }
+
     async showUsers(){
        return this.prisma.users.findMany({
         include: {agedas: true}
@@ -129,8 +127,6 @@ export class AuthService {
                 return {valid: false, resp}
             }
           
-          
-       
         await this.prisma.users.create({
         data:{
             name, 
@@ -151,62 +147,102 @@ export class AuthService {
         const formatUtf8 = "YYYY-MM-DDTHH:mm"
         const zone = 'America/Fortaleza'
         const horaCorrectUtf = formatToTimeZone( agend.date, formatUtf8, {timeZone: zone} )
-        const startHour = formatToTimeZone(setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 7), formatUtf8, {timeZone:zone });
+        const startHour = formatToTimeZone(setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 4), formatUtf8, {timeZone:zone });
         const endHour = formatToTimeZone(setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 18), formatUtf8, {timeZone: zone} );
         const now = formatToTimeZone(new Date(), formatUtf8, {timeZone: zone})
         return {userDate :horaCorrectUtf, startHour: startHour, endHour: endHour, now: now }
     }
 
-    convertISO(){
-
-    }
-
     async agendar( agend: agendarDto, user ) {
        
-       
-            const{ userDate, startHour, endHour,  now} = this.agendaUtf(agend)
-           
+            const { userDate, startHour, endHour,  now} = this.agendaUtf(agend)
+            
             if (isBefore( userDate, now )){
                 throw new HttpException('Voçe e um viajate do tempo?', HttpStatus.BAD_REQUEST,{cause: 'Voçe marcou antes da data ou hora atual'} )
             }
-
+            
             if (isBefore(userDate, startHour) ){
                 throw new HttpException('funcionameto apois as 7:00', HttpStatus.BAD_REQUEST,{cause: 'Voçe Marcou para entes das 7:00'} )
             }
             if (isAfter(userDate, endHour)){
-                throw new HttpException('funcionameto ate as 16:00', HttpStatus.BAD_REQUEST,{cause: 'Voçe Marcou para entes das 7:00'} )
+                throw new HttpException('funcionameto ate as 18:00', HttpStatus.BAD_REQUEST,{cause: 'Voçe Marcou para entes das 7:00'} )
             }
-
-
+            const horaInicial =  setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 7)
+            const horaFinal = setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 18)
+            
             const conflict = await this.prisma.agenda.findMany({
                 where:{
+                    userId: user.id,
                     date:{
-                        gte: subHours(userDate, 2), 
-                        lte: addHours(userDate, 2)
+                        gte: horaInicial, 
+                        lte: horaFinal
                     }
                 }
             })
-
-            console.log( conflict , );
             
+            const dateparse = parseISO(agend.date )
+            if (conflict.some(agenda => {
+                const agedDate = new Date(agenda.date)
+                const diffInMilliseconds = Math.abs(agedDate.getTime() - dateparse.getTime())
+                return  diffInMilliseconds < 7200000;
+            })){
+                throw new HttpException('Cada compromisso deve ter um intervalo mínimo de 1 hora e máximo de 2 horas de outros compromissos.', HttpStatus.BAD_REQUEST,{cause: 'Voçe Marcou para entes das 7:00'} )
+            }
+
             return this.prisma.agenda.create({
                 data:{
                     userId: user.id, 
-                    date: userDate, 
+                    date: new Date(agend.date), 
                     name: user.name
                 }
             })
-
-
-       
     }
 
     async showAgenda() {
-       const agenda = await this.prisma.agenda.findMany({
-        
+       const agendaList = await this.prisma.agenda.findMany({
+        orderBy: {
+            screated_at: 'desc'
+        }
        })  
+        const formatAgedList = agendaList.map(agenda =>{
+        const zoneDate = formatToTimeZone( agenda.date, 'DD/MM/YYYY HH:mm:ss', {timeZone: 'America/Fortaleza'})
+        
+        return {
+            id: agenda.id, 
+            name: agenda.name,
+            userId: agenda.userId,
+            date: zoneDate
+        }
+    })
+       return formatAgedList
+    }
 
-       return 
+    async DeleteAgenda( id :number, user ){
+            console.log(id);
+            
+        try{
+            const agenda = await this.prisma.agenda.findFirst({
+                where:{
+                    id: id
+                }
+            })
+
+            if (!agenda || (await agenda).userId !== user.id ){
+                throw new HttpException('Permissão negada para deletar este compromisso.', HttpStatus.BAD_REQUEST)
+            }
+
+            // await this.prisma.agenda.delete({
+            //     where: {
+            //      id: id
+            //     }
+            //  })
+
+        }catch(e){
+            return console.log(e);
+            
+        }
+
+       
     }
 
 }

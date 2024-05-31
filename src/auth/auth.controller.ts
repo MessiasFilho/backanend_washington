@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Headers, Request, UseGuards, HttpException, HttpStatus } from "@nestjs/common";
+import { Body, Controller, Post, Get, Headers, Request, UseGuards, HttpException, HttpStatus, Delete, Param, ParseIntPipe } from "@nestjs/common";
 import { loginDto } from "./dto/auth-login-dto";
 import { registerDTO } from "./dto/auth-register-dto";
 import { forgetDTO } from "./dto/auth-forget-dto";
@@ -9,6 +9,7 @@ import { AuthGuard } from "src/guard/auth.guard";
 import { userDecorator } from "src/decorators/user-decorator";
 
 import { agendarDto } from "./dto/auth-agenda-dto";
+import { ParamIdcuston } from "src/decorators/param-id.decorator";
 
 @Controller('auth')
 export class AuthController {
@@ -32,19 +33,6 @@ export class AuthController {
 
    
 
-
-    @UseGuards(AuthGuard)
-    @Post('agendar')
-    async agendar (@Request() req,  @Body() body :agendarDto  ){
-       return this.authservice.agendar(body, req.user )
-    }
-
-    @UseGuards(AuthGuard)
-    @Get('listagenda')
-    async listAgendas(){
-        return this.authservice.showAgenda()
-    }
-
     @UseGuards(AuthGuard)
     @Get()
     async userAuth (@Request() req){
@@ -65,6 +53,25 @@ export class AuthController {
     @Post('reset')
     async reset (@Body() {password, token}: authResetDto){
         // return this.auth.reset(password, token)
+    }
+
+    
+    @UseGuards(AuthGuard)
+    @Post('agendar')
+    async agendar (@Request() req,  @Body() body :agendarDto  ){
+       return this.authservice.agendar(body, req.user )
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('listagenda')
+    async listAgendas(){
+        return this.authservice.showAgenda()
+    }
+
+    @UseGuards(AuthGuard)
+    @Delete(':id')
+    async deleteAgenda(@Param('id', ParseIntPipe ) id: number, @Request() req ){
+        return this.authservice.DeleteAgenda(id, req.user)
     }
 
     @UseGuards(AuthGuard)

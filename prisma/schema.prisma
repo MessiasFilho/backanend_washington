@@ -25,7 +25,7 @@ model users {
 
 model Agenda {
   id          Int      @id @default(autoincrement())
-  userId      Int
+  userId      Int       
   name        String   @db.VarChar(191)
   date        DateTime @unique()
   screated_at DateTime @default(now()) @db.Timestamp(0)
