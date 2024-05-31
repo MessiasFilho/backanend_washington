@@ -13,7 +13,6 @@ import { ParamIdcuston } from "src/decorators/param-id.decorator";
 
 @Controller('auth')
 export class AuthController {
-
     constructor(private readonly userservice: userService, 
                 private readonly authservice: AuthService
     ){}
@@ -30,8 +29,6 @@ export class AuthController {
             }
         return this.authservice.register(body)
     }
-
-   
 
     @UseGuards(AuthGuard)
     @Get()
@@ -69,9 +66,10 @@ export class AuthController {
     }
 
     @UseGuards(AuthGuard)
-    @Delete(':id')
+    @Delete('deleteagenda/:id')
     async deleteAgenda(@Param('id', ParseIntPipe ) id: number, @Request() req ){
-        return this.authservice.DeleteAgenda(id, req.user)
+    
+     return this.authservice.DeleteAgenda(id, req.user)
     }
 
     @UseGuards(AuthGuard)

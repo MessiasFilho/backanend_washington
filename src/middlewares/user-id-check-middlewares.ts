@@ -6,7 +6,6 @@ export class userIdCheckMiddleware implements NestMiddleware{
         
         console.log('User idCreked Antes');
         
-
         if(isNaN(Number(req.params.id)) || Number(req.params.id) <= 0 ){
             throw new BadRequestException('ID invalido')
         }

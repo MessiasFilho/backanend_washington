@@ -217,9 +217,15 @@ export class AuthService {
        return formatAgedList
     }
 
-    async DeleteAgenda( id :number, user ){
-            console.log(id);
+    async UpdateAgenda (){
+        try {
             
+        } catch (error) {
+            
+        }
+    }
+
+    async DeleteAgenda( id :number, user ){
         try{
             const agenda = await this.prisma.agenda.findFirst({
                 where:{
@@ -231,18 +237,18 @@ export class AuthService {
                 throw new HttpException('Permissão negada para deletar este compromisso.', HttpStatus.BAD_REQUEST)
             }
 
-            // await this.prisma.agenda.delete({
-            //     where: {
-            //      id: id
-            //     }
-            //  })
+            await this.prisma.agenda.delete({
+                where: {
+                 id: id
+                }
+             })
 
         }catch(e){
-            return console.log(e);
+            throw new HttpException('error ao deletar agenda', HttpStatus.BAD_REQUEST)
             
         }
-
-       
     }
+
+
 
 }
