@@ -6,8 +6,11 @@ import { createJuryDto } from "./dto/createJuridDto";
 import { logInterceptor } from "src/interceptors/log.interceptor";
 import { ParamIdcuston } from "src/decorators/param-id.decorator";
 import { AuthGuard } from "src/guard/auth.guard";
+import { RoleGuard } from "src/guard/role.guard";
 
- @UseInterceptors(logInterceptor)
+
+@UseGuards( AuthGuard , RoleGuard)
+@UseInterceptors(logInterceptor)
 @Controller('users')
 export class userController{ 
     constructor(private readonly userservice: userService ){}

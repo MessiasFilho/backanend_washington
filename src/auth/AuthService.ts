@@ -112,7 +112,7 @@ export class AuthService {
         return this.createToken(user);
     }
 
-    async register({name,email,pessoa, cnpj ,fone,cpf, password, confpassword}: registerDTO): Promise <userInterface> {
+    async register({name,email,pessoa, cnpj ,fone,cpf, password, confpassword, role}: registerDTO): Promise <userInterface> {
 
         if ( password !== confpassword){
             return {statusUser: false, message: 'Senhas Diferentes'}
@@ -150,6 +150,7 @@ export class AuthService {
             fone,
             cpf: cpf === '' ? null : cpf,   
             password, 
+            role,
             confpassword
         }
        })
