@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Headers, Request, UseGuards, HttpException, HttpStatus, Delete, Param, ParseIntPipe } from "@nestjs/common";
+import { Body, Controller, Post, Get, Headers, Request, Res,  UseGuards, HttpException, HttpStatus, Delete, Param, ParseIntPipe } from "@nestjs/common";
 import { loginDto } from "./dto/auth-login-dto";
 import { registerDTO } from "./dto/auth-register-dto";
 import { forgetDTO } from "./dto/auth-forget-dto";
@@ -9,7 +9,7 @@ import { AuthGuard } from "src/guard/auth.guard";
 import { userDecorator } from "src/decorators/user-decorator";
 
 import { agendarDto } from "./dto/auth-agenda-dto";
-import { ParamIdcuston } from "src/decorators/param-id.decorator";
+import { Response } from "express";
 
 @Controller('auth')
 export class AuthController {
@@ -18,20 +18,25 @@ export class AuthController {
     ){}
     
     @Post('login')
-    async loginUser (@Body() {email, password}: loginDto){
-         return this.authservice.login(email, password)
+    async loginUser (@Body() {email, password}: loginDto, @Res() res) {
+         const emailuser = await this.authservice.login(email, password)
+         if (!emailuser.statusUser){
+            return res.status(HttpStatus.BAD_REQUEST).json({error: emailuser.message })
+         }
+         return res.status(HttpStatus.OK).json({message: emailuser.message, token: emailuser.token})
     } 
 
     @Post('register')
-    async register (@Body() body: registerDTO){
-        if ( body.password !== body.confpassword){
-                    throw new HttpException('senhas diferentes', HttpStatus.BAD_REQUEST)
-            }
-        return this.authservice.register(body)
+    async register (@Body() body: registerDTO, @Res() resp ) {   
+        const user = await this.authservice.register(body)
+        if(!user.statusUser){
+          return resp.status(HttpStatus.BAD_REQUEST).json({error: user.message})
+        }
+        return resp.status(HttpStatus.OK).json({message: user.message, valid: user.statusUser})
     }
 
     @UseGuards(AuthGuard)
-    @Get()
+    @Get('user')
     async userAuth (@Request() req){
         return req.user
     } 
@@ -55,8 +60,12 @@ export class AuthController {
     
     @UseGuards(AuthGuard)
     @Post('agendar')
-    async agendar (@Request() req,  @Body() body :agendarDto  ){
-       return this.authservice.agendar(body, req.user )
+    async agendar (@Request() req, @Body() body :agendarDto, @Res() res  ){
+       const agenda = await this.authservice.agendar(body, req.user)
+       if (!agenda.created){
+            return res.status(HttpStatus.BAD_REQUEST).json({error: agenda.message})
+       }
+         return res.status(HttpStatus.CREATED).json({message: agenda.message})
     }
 
     @UseGuards(AuthGuard)
@@ -67,9 +76,13 @@ export class AuthController {
 
     @UseGuards(AuthGuard)
     @Delete('deleteagenda/:id')
-    async deleteAgenda(@Param('id', ParseIntPipe ) id: number, @Request() req ){
-    
-     return this.authservice.DeleteAgenda(id, req.user)
+    async deleteAgenda(@Param('id', ParseIntPipe ) id: number, @Request() req, @Res() res  ){
+        const agenda = await this.authservice.DeleteAgenda(id, req.user)
+
+        if (!agenda.created){
+            return res.status(HttpStatus.BAD_REQUEST).json({error: agenda.message})
+        }
+        return res.status(HttpStatus.OK).json({message: agenda.message})
     }
 
     @UseGuards(AuthGuard)

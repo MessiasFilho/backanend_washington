@@ -1,14 +1,26 @@
-import { Injectable, BadRequestException, NotFoundException, HttpException, HttpStatus } from "@nestjs/common";
+import { Injectable, BadRequestException, NotFoundException, HttpException, HttpStatus, Response } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { users } from "@prisma/client";
 import { prismaService } from "src/prisma/prisma.service";
-import { createUserDto } from "src/user/dto/createUserDto";
 import { userService } from "src/user/user.service";
 import { agendarDto } from "./dto/auth-agenda-dto";
 import { registerDTO } from "./dto/auth-register-dto";
 import { isAfter, isBefore, parseISO, setHours, setMilliseconds, setMinutes, setSeconds} from "date-fns";
-const { listTimeZones } = require('timezone-support')
-import {  formatToTimeZone} from "date-fns-timezone";
+import {  formatToTimeZone} from "date-fns-timezone" ;
+
+interface agendaInterface {
+    created: boolean, 
+    message: string
+}
+
+interface userInterface{
+    statusUser: boolean, 
+    message: string, 
+}
+
+interface emailUser extends userInterface {
+    token: string
+}
 
 @Injectable()
 export class AuthService {
@@ -55,7 +67,7 @@ export class AuthService {
         }
     }
 
-    async login(email: string, password: string) {
+    async login(email: string, password: string): Promise <emailUser> {
         const user = await this.prisma.users.findFirst({
             where: {
                 email,
@@ -63,9 +75,11 @@ export class AuthService {
             }
         });
         if (!user) {
-            throw new NotFoundException('Email ou Senha incorreta ');
+            return {statusUser: false, message: 'logado com sucesso', token:''}
         }
-        return this.createToken(user);
+        const tokenuser = this.createToken(user);
+        
+        return {statusUser: true, message: 'logado com sucesso', token: tokenuser.accessToken }
     }
 
     async forget(email: string) {
@@ -98,8 +112,11 @@ export class AuthService {
         return this.createToken(user);
     }
 
-    async register({name,email,pessoa, cnpj ,fone,cpf, password,confpassword}: registerDTO) {
-        
+    async register({name,email,pessoa, cnpj ,fone,cpf, password, confpassword}: registerDTO): Promise <userInterface> {
+
+        if ( password !== confpassword){
+            return {statusUser: false, message: 'Senhas Diferentes'}
+        }
         const cpfuser = await this.prisma.users.findFirst({
             where:{cpf}
           })
@@ -115,16 +132,13 @@ export class AuthService {
           })
 
           if (cpfuser){
-             const resp = new HttpException('CPF Já Cadastrado', HttpStatus.BAD_REQUEST)
-                return {valid: false, resp}
+                return {statusUser: false, message: 'CPF Já foi cadastrado'}
             }
           if (emailuser){
-             const resp = new HttpException('email Já Cadastrado', HttpStatus.BAD_REQUEST)
-                return {valid: false, resp}
+                 return {statusUser: false, message: 'Email Já foi cadastrado'}
             }
           if (cnpjuser){
-             const resp = new HttpException('CNPJ Já Cadastrado', HttpStatus.BAD_REQUEST)
-                return {valid: false, resp}
+            return {statusUser: false, message: 'CNPJ Já foi cadastrado'}
             }
           
         await this.prisma.users.create({
@@ -140,7 +154,7 @@ export class AuthService {
         }
        })
 
-       return { message: 'Usuario Criado com sucesso', valid: true }
+       return { message: 'Usuario Criado com sucesso', statusUser: true }
     }
     // d.M.YYYY HH:mm:ss.SSS [GMT]Z (z)
     agendaUtf (agend: agendarDto) {
@@ -150,32 +164,34 @@ export class AuthService {
         const startHour = formatToTimeZone(setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 4), formatUtf8, {timeZone:zone });
         const endHour = formatToTimeZone(setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 18), formatUtf8, {timeZone: zone} );
         const now = formatToTimeZone(new Date(), formatUtf8, {timeZone: zone})
-        return {userDate :horaCorrectUtf, startHour: startHour, endHour: endHour, now: now }
+        const date = new Date(agend.date)
+        return { date: date ,userDate :horaCorrectUtf, startHour: startHour, endHour: endHour, now: now }
     }
 
-    async agendar( agend: agendarDto, user ) {
+    async agendar( agend: agendarDto, user ): Promise <agendaInterface> {
        
-            const { userDate, startHour, endHour,  now} = this.agendaUtf(agend)
+            const { userDate, startHour, endHour,  now, date} = this.agendaUtf(agend)
             
+            try{
             if (isBefore( userDate, now )){
-                throw new HttpException('Voçe e um viajate do tempo?', HttpStatus.BAD_REQUEST,{cause: 'Voçe marcou antes da data ou hora atual'} )
+                return {created: false, message: 'A data inserida e antes da data de hoje'}
             }
             
             if (isBefore(userDate, startHour) ){
-                throw new HttpException('funcionameto apois as 7:00', HttpStatus.BAD_REQUEST,{cause: 'Voçe Marcou para entes das 7:00'} )
+               return {message:'funcionameto apois as 7:00',created: false}
             }
             if (isAfter(userDate, endHour)){
-                throw new HttpException('funcionameto ate as 18:00', HttpStatus.BAD_REQUEST,{cause: 'Voçe Marcou para entes das 7:00'} )
+                return{message: 'funcionamento ate as 18 horas ', created: false}
             }
-            const horaInicial =  setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 7)
-            const horaFinal = setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 18)
+
+            const hInicial = new Date(date.getTime() - 2 * 60 * 60 * 1000) 
+            const hFinal = new Date(date.getTime()  + 2 * 60 * 60 * 1000) 
             
             const conflict = await this.prisma.agenda.findMany({
                 where:{
-                    userId: user.id,
                     date:{
-                        gte: horaInicial, 
-                        lte: horaFinal
+                        gte: hInicial, 
+                        lte: hFinal
                     }
                 }
             })
@@ -186,16 +202,24 @@ export class AuthService {
                 const diffInMilliseconds = Math.abs(agedDate.getTime() - dateparse.getTime())
                 return  diffInMilliseconds < 7200000;
             })){
-                throw new HttpException('Cada compromisso deve ter um intervalo mínimo de 1 hora e máximo de 2 horas de outros compromissos.', HttpStatus.BAD_REQUEST,{cause: 'Voçe Marcou para entes das 7:00'} )
+                return {message: 'Cada compromisso deve ter um intervalo mínimo de 2 horas', created: false}
             }
 
-            return this.prisma.agenda.create({
+            await this.prisma.agenda.create({
                 data:{
                     userId: user.id, 
                     date: new Date(agend.date), 
                     name: user.name
                 }
+        
             })
+            return {created: true , message: 'agenda criada'}
+            }catch(error){
+                console.log(error);    
+                return {created: false , message: 'Erro ao criar agenda'}
+            }
+
+            
     }
 
     async showAgenda() {
@@ -217,15 +241,7 @@ export class AuthService {
        return formatAgedList
     }
 
-    async UpdateAgenda (){
-        try {
-            
-        } catch (error) {
-            
-        }
-    }
-
-    async DeleteAgenda( id :number, user ){
+    async DeleteAgenda( id :number, user ): Promise <agendaInterface>{
         try{
             const agenda = await this.prisma.agenda.findFirst({
                 where:{
@@ -234,7 +250,7 @@ export class AuthService {
             })
 
             if (!agenda || (await agenda).userId !== user.id ){
-                throw new HttpException('Permissão negada para deletar este compromisso.', HttpStatus.BAD_REQUEST)
+               return {created: false, message: 'Permição negada para deletar a agenda'}
             }
 
             await this.prisma.agenda.delete({
@@ -242,9 +258,10 @@ export class AuthService {
                  id: id
                 }
              })
-
+             return {message: 'Agenda deletada', created: true}
         }catch(e){
-            throw new HttpException('error ao deletar agenda', HttpStatus.BAD_REQUEST)
+            console.log(e);
+            return {created: false, message: 'erro ao deletar a egenda'}
             
         }
     }
