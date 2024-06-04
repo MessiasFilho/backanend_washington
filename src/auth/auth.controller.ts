@@ -3,20 +3,17 @@ import { loginDto } from "./dto/auth-login-dto";
 import { registerDTO } from "./dto/auth-register-dto";
 import { forgetDTO } from "./dto/auth-forget-dto";
 import { authResetDto } from "./dto/auth-reset-dto";
-import { userService } from "src/user/user.service";
 import { AuthService } from "./AuthService";
 import { AuthGuard } from "src/guard/auth.guard";
 import { userDecorator } from "src/decorators/user-decorator";
-import { agendarDto } from "./dto/auth-agenda-dto";
 import { Roles } from "src/decorators/role.decorator";
 import { role } from "src/enums/role.enum";
 import { RoleGuard } from "src/guard/role.guard";
 
-// @UseGuards( AuthGuard ,RoleGuard)
+
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly userservice: userService, 
-                private readonly authservice: AuthService
+    constructor( private readonly authservice: AuthService
     ){}
     
     @Post('login')
@@ -37,12 +34,14 @@ export class AuthController {
         return resp.status(HttpStatus.OK).json({message: user.message, valid: user.statusUser})
     }
 
-   
+    @UseGuards(AuthGuard, RoleGuard)
+    @Roles(role.admin, role.user)
     @Get('user')
     async userAuth (@Request() req){
         return req.user
     } 
 
+    @UseGuards(AuthGuard, RoleGuard)
     @Roles(role.admin)
     @Get('showusers')
     async showUsers (){
@@ -54,41 +53,15 @@ export class AuthController {
         // return this.auth.forget(email)
     }
 
+    @UseGuards(AuthGuard, RoleGuard)
+    @Roles(role.admin, role.user)
     @Post('reset')
     async reset (@Body() {password, token}: authResetDto){
         // return this.auth.reset(password, token)
     }
 
-    
-   
-    @Post('agendar')
-    async agendar (@Request() req, @Body() body :agendarDto, @Res() res  ){
-       const agenda = await this.authservice.agendar(body, req.user)
-       if (!agenda.created){
-            return res.status(HttpStatus.BAD_REQUEST).json({error: agenda.message})
-       }
-         return res.status(HttpStatus.CREATED).json({message: agenda.message})
-    }
-
-   
-    @Get('listagenda')
-    async listAgendas(){
-        return this.authservice.showAgenda()
-    }
-
-   
-    @Delete('deleteagenda/:id')
-    async deleteAgenda(@Param('id', ParseIntPipe ) id: number, @Request() req, @Res() res  ){
-        const agenda = await this.authservice.DeleteAgenda(id, req.user)
-
-        if (!agenda.created){
-            return res.status(HttpStatus.BAD_REQUEST).json({error: agenda.message})
-        }
-        return res.status(HttpStatus.OK).json({message: agenda.message})
-    }
-    
     @UseGuards(AuthGuard, RoleGuard)
-    @Roles(role.User)
+    @Roles(role.user)
     @Post('teste')
     async teste(@userDecorator('role') user){
         return {roles: user, data:'oi'}

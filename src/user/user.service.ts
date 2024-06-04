@@ -36,22 +36,6 @@ export class userService {
     })
   }
 
- 
-  // async createAdmin( {name,email,pessoa,fone,confpassword,cpf,password, role}:adminDto){
-  //   return this.prisma.users.create({
-  //     data: {
-  //       name, 
-  //       email,
-  //       pessoa, 
-  //       fone,
-  //       role,
-  //       cpf,
-  //       password,
-  //       confpassword,
-  //     }
-  //   })
-  // }
-
  async showUsers(){
     const users = await this.prisma.users.findMany({
       include: {

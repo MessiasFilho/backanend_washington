@@ -3,11 +3,14 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { userModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { scheduleModule } from './schedule/schedule.module';
 
 @Module({
   imports: [
-    forwardRef(() => userModule), 
-    forwardRef(() =>AuthModule)],
+    userModule, 
+    AuthModule, 
+    scheduleModule,],
+
   controllers: [AppController],
   providers: [AppService],
 })

@@ -2,16 +2,8 @@ import { Injectable, BadRequestException, NotFoundException, HttpException, Http
 import { JwtService } from "@nestjs/jwt";
 import { users } from "@prisma/client";
 import { prismaService } from "src/prisma/prisma.service";
-import { userService } from "src/user/user.service";
-import { agendarDto } from "./dto/auth-agenda-dto";
 import { registerDTO } from "./dto/auth-register-dto";
-import { isAfter, isBefore, parseISO, setHours, setMilliseconds, setMinutes, setSeconds} from "date-fns";
-import {  formatToTimeZone} from "date-fns-timezone" ;
 
-interface agendaInterface {
-    created: boolean, 
-    message: string
-}
 
 interface userInterface{
     statusUser: boolean, 
@@ -156,116 +148,5 @@ export class AuthService {
 
        return { message: 'Usuario Criado com sucesso', statusUser: true }
     }
-    // d.M.YYYY HH:mm:ss.SSS [GMT]Z (z)
-    agendaUtf (agend: agendarDto) {
-        const formatUtf8 = "YYYY-MM-DDTHH:mm"
-        const zone = 'America/Fortaleza'
-        const horaCorrectUtf = formatToTimeZone( agend.date, formatUtf8, {timeZone: zone} )
-        const startHour = formatToTimeZone(setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 4), formatUtf8, {timeZone:zone });
-        const endHour = formatToTimeZone(setHours(setMinutes(setSeconds(setMilliseconds(new Date(agend.date), 0), 0), 0), 18), formatUtf8, {timeZone: zone} );
-        const now = formatToTimeZone(new Date(), formatUtf8, {timeZone: zone})
-        const date = new Date(agend.date)
-        return { date: date ,userDate :horaCorrectUtf, startHour: startHour, endHour: endHour, now: now }
-    }
-
-    async agendar( agend: agendarDto, user ): Promise <agendaInterface> {
-       
-            const { userDate, startHour, endHour,  now, date} = this.agendaUtf(agend)
-            
-            try{
-            if (isBefore( userDate, now )){
-                return {created: false, message: 'A data inserida e antes da data de hoje'}
-            }
-            
-            if (isBefore(userDate, startHour) ){
-               return {message:'funcionameto apois as 7:00',created: false}
-            }
-            if (isAfter(userDate, endHour)){
-                return{message: 'funcionamento ate as 18 horas ', created: false}
-            }
-
-            const hInicial = new Date(date.getTime() - 2 * 60 * 60 * 1000) 
-            const hFinal = new Date(date.getTime()  + 2 * 60 * 60 * 1000) 
-            
-            const conflict = await this.prisma.agenda.findMany({
-                where:{
-                    date:{
-                        gte: hInicial, 
-                        lte: hFinal
-                    }
-                }
-            })
-            
-            const dateparse = parseISO(agend.date )
-            if (conflict.some(agenda => {
-                const agedDate = new Date(agenda.date)
-                const diffInMilliseconds = Math.abs(agedDate.getTime() - dateparse.getTime())
-                return  diffInMilliseconds < 7200000;
-            })){
-                return {message: 'Cada compromisso deve ter um intervalo mínimo de 2 horas', created: false}
-            }
-
-            await this.prisma.agenda.create({
-                data:{
-                    userId: user.id, 
-                    date: new Date(agend.date), 
-                    name: user.name
-                }
-        
-            })
-            return {created: true , message: 'agenda criada'}
-            }catch(error){
-                console.log(error);    
-                return {created: false , message: 'Erro ao criar agenda'}
-            }
-
-            
-    }
-
-    async showAgenda() {
-       const agendaList = await this.prisma.agenda.findMany({
-        orderBy: {
-            screated_at: 'desc'
-        }
-       })  
-        const formatAgedList = agendaList.map(agenda =>{
-        const zoneDate = formatToTimeZone( agenda.date, 'DD/MM/YYYY HH:mm:ss', {timeZone: 'America/Fortaleza'})
-        
-        return {
-            id: agenda.id, 
-            name: agenda.name,
-            userId: agenda.userId,
-            date: zoneDate
-        }
-    })
-       return formatAgedList
-    }
-
-    async DeleteAgenda( id :number, user ): Promise <agendaInterface>{
-        try{
-            const agenda = await this.prisma.agenda.findFirst({
-                where:{
-                    id: id
-                }
-            })
-
-            if (!agenda || (await agenda).userId !== user.id ){
-               return {created: false, message: 'Permição negada para deletar a agenda'}
-            }
-
-            await this.prisma.agenda.delete({
-                where: {
-                 id: id
-                }
-             })
-             return {message: 'Agenda deletada', created: true}
-        }catch(e){
-            console.log(e);
-            return {created: false, message: 'erro ao deletar a egenda'}
-            
-        }
-    }
-
-
 
 }

@@ -4,16 +4,16 @@ import { AuthController } from "./auth.controller";
 import { userModule } from "src/user/user.module";
 import { prismaModule } from "src/prisma/prisma.module";
 import { AuthService } from "./AuthService";
-import { userService } from "src/user/user.service";
-import { AuthGuard } from "src/guard/auth.guard";
+import { scheduleModule } from "src/schedule/schedule.module";
 
 @Module({
     exports:[AuthService],
     imports:[JwtModule.register({
         secret:'I;fb>oATk}l_KJG91.7Y$9T*IC1&Yb2#'
     }),
-     forwardRef(() =>userModule), 
-    prismaModule, 
+     forwardRef(() => userModule), 
+      forwardRef(() =>scheduleModule),
+      prismaModule, 
     ], 
     providers:[AuthService], 
     controllers:[AuthController]
