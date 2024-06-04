@@ -9,10 +9,10 @@ import { AuthGuard } from "src/guard/auth.guard";
 import { userDecorator } from "src/decorators/user-decorator";
 import { agendarDto } from "./dto/auth-agenda-dto";
 import { Roles } from "src/decorators/role.decorator";
-import { Role } from "src/enums/role.enum";
+import { role } from "src/enums/role.enum";
 import { RoleGuard } from "src/guard/role.guard";
 
-@UseGuards( AuthGuard ,RoleGuard)
+// @UseGuards( AuthGuard ,RoleGuard)
 @Controller('auth')
 export class AuthController {
     constructor(private readonly userservice: userService, 
@@ -43,7 +43,7 @@ export class AuthController {
         return req.user
     } 
 
-    @Roles(Role.admin)
+    @Roles(role.admin)
     @Get('showusers')
     async showUsers (){
         return this.authservice.showUsers()
@@ -86,11 +86,11 @@ export class AuthController {
         }
         return res.status(HttpStatus.OK).json({message: agenda.message})
     }
-
-    @Roles(Role.admin)
-    @UseGuards(AuthGuard)
+    
+    @UseGuards(AuthGuard, RoleGuard)
+    @Roles(role.User)
     @Post('teste')
-    async teste(@userDecorator('email') user, @Request() req ){
-        return {data: user , req}
+    async teste(@userDecorator('role') user){
+        return {roles: user, data:'oi'}
     }
 }

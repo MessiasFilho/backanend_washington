@@ -1,6 +1,6 @@
 
 import { IsEmail, IsEnum, IsOptional, IsString, IsStrongPassword} from "class-validator";
-import { Role } from "src/enums/role.enum";
+import { role } from "src/enums/role.enum";
 
 export class registerDTO  {
 
@@ -23,7 +23,7 @@ export class registerDTO  {
     cnpj: string
 
     @IsOptional()
-    @IsEnum(Role)
+    @IsEnum(role)
     role: string
 
     @IsStrongPassword({

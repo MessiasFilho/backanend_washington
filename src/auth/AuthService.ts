@@ -26,7 +26,6 @@ interface emailUser extends userInterface {
 export class AuthService {
     constructor(private readonly jwtservice: JwtService,
         private readonly prisma: prismaService,
-        private readonly userService: userService
     ) { }
 
     createToken(user: users) {
