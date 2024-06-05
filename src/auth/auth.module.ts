@@ -9,7 +9,7 @@ import { scheduleModule } from "src/schedule/schedule.module";
 @Module({
     exports:[AuthService],
     imports:[JwtModule.register({
-        secret:'I;fb>oATk}l_KJG91.7Y$9T*IC1&Yb2#'
+        secret: process.env.JWT_SECRET
     }),
      forwardRef(() => userModule), 
       forwardRef(() =>scheduleModule),

@@ -6,6 +6,7 @@ import { RoleGuard } from "src/guard/role.guard";
 import { scheduleDto } from "./dto/schedule-dto";
 import { scheduleSevice } from "./schedule.service";
 import { ParamIdcuston } from "src/decorators/param-id.decorator";
+import { SkipThrottle } from "@nestjs/throttler";
 
 @UseGuards(AuthGuard, RoleGuard)
 @Controller('schedule')
@@ -21,7 +22,8 @@ export class scheduleController {
        }
          return res.status(HttpStatus.CREATED).json({message: agenda.message})
     }
-
+    
+    @SkipThrottle()
     @Roles(role.admin, role.user)
     @Get('list')
     async listAgendas(){

@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Headers, Request, Res,  UseGuards, HttpException, HttpStatus, Delete, Param, ParseIntPipe } from "@nestjs/common";
+import { Body, Controller, Post, Get, Headers, Request, Res,  UseGuards, HttpException, HttpStatus, Delete, Param, ParseIntPipe, UseInterceptors, UploadedFile } from "@nestjs/common";
 import { loginDto } from "./dto/auth-login-dto";
 import { registerDTO } from "./dto/auth-register-dto";
 import { forgetDTO } from "./dto/auth-forget-dto";
@@ -9,12 +9,11 @@ import { userDecorator } from "src/decorators/user-decorator";
 import { Roles } from "src/decorators/role.decorator";
 import { role } from "src/enums/role.enum";
 import { RoleGuard } from "src/guard/role.guard";
-
+import { FileInterceptor } from "@nestjs/platform-express";
 
 @Controller('auth')
 export class AuthController {
-    constructor( private readonly authservice: AuthService
-    ){}
+    constructor( private readonly authservice: AuthService){}
     
     @Post('login')
     async loginUser (@Body() {email, password}: loginDto, @Res() res) {
@@ -66,4 +65,14 @@ export class AuthController {
     async teste(@userDecorator('role') user){
         return {roles: user, data:'oi'}
     }
+    
+    @UseInterceptors(FileInterceptor('file'))
+    @UseGuards(AuthGuard, RoleGuard)
+    @Roles(role.user)
+    @Post('photo')
+    async UploadFoto(@userDecorator() user, @UploadedFile() photho: Express.Multer.File){
+        return  {img: photho ,users: user }
+    }
+
+
 }

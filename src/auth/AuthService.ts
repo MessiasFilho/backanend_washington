@@ -3,7 +3,7 @@ import { JwtService } from "@nestjs/jwt";
 import { users } from "@prisma/client";
 import { prismaService } from "src/prisma/prisma.service";
 import { registerDTO } from "./dto/auth-register-dto";
-
+import * as bcrypt  from 'bcrypt'
 
 interface userInterface{
     statusUser: boolean, 
@@ -59,17 +59,22 @@ export class AuthService {
     }
 
     async login(email: string, password: string): Promise <emailUser> {
+
         const user = await this.prisma.users.findFirst({
             where: {
                 email,
-                password
             }
         });
         if (!user) {
-            return {statusUser: false, message: 'logado com sucesso', token:''}
+            return {statusUser: false, message: 'email ou senha incorretos', token:''}
         }
+        if(!await bcrypt.compare(password , user.password)){
+            return {statusUser: false, message: 'email ou senha incorretos', token:''}
+          } 
+
+
+
         const tokenuser = this.createToken(user);
-        
         return {statusUser: true, message: 'logado com sucesso', token: tokenuser.accessToken }
     }
 
@@ -104,10 +109,16 @@ export class AuthService {
     }
 
     async register({name,email,pessoa, cnpj ,fone,cpf, password, confpassword, role}: registerDTO): Promise <userInterface> {
+        const salt = await bcrypt.genSalt()
 
         if ( password !== confpassword){
             return {statusUser: false, message: 'Senhas Diferentes'}
         }
+
+        password = await bcrypt.hash(password, salt)
+        confpassword = await bcrypt.hash(confpassword, salt)
+
+        
         const cpfuser = await this.prisma.users.findFirst({
             where:{cpf}
           })
