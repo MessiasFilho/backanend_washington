@@ -4,6 +4,7 @@ import { users } from "@prisma/client";
 import { prismaService } from "src/prisma/prisma.service";
 import { registerDTO } from "./dto/auth-register-dto";
 import * as bcrypt  from 'bcrypt'
+import { createUserDto } from "src/user/dto/createUserDto";
 
 interface userInterface{
     statusUser: boolean, 
@@ -59,12 +60,13 @@ export class AuthService {
     }
 
     async login(email: string, password: string): Promise <emailUser> {
-
         const user = await this.prisma.users.findFirst({
             where: {
                 email,
             }
         });
+
+
         if (!user) {
             return {statusUser: false, message: 'email ou senha incorretos', token:''}
         }
@@ -93,6 +95,9 @@ export class AuthService {
 
     async showUsers(){
        return this.prisma.users.findMany({
+        where: {
+            role: 'users'
+        },
         include: {agedas: true}
        })
     }

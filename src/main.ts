@@ -8,10 +8,11 @@ async function bootstrap() {
       "origin": "*",
       "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
       "preflightContinue": false,
-      "optionsSuccessStatus": 204
+      "optionsSuccessStatus": 204, 
+      
   })
   app.useGlobalPipes(new ValidationPipe)
   // app.useGlobalInterceptors( new logInterceptor())
-  await app.listen(3001, '192.168.1.10');
+  await app.listen(3001);
 }
 bootstrap();

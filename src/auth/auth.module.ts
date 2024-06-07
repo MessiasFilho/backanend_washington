@@ -5,6 +5,7 @@ import { userModule } from "src/user/user.module";
 import { prismaModule } from "src/prisma/prisma.module";
 import { AuthService } from "./AuthService";
 import { scheduleModule } from "src/schedule/schedule.module";
+import * as dotenv from 'dotenv'
 
 @Module({
     exports:[AuthService],
