@@ -28,6 +28,8 @@ model Agenda {
   userId      Int       
   name        String   @db.VarChar(191)
   date        DateTime @unique()
+  email       String   @db.VarChar(191)
+  fone        String   @db.VarChar(20)
   screated_at DateTime @default(now()) @db.Timestamp(0)
   updated_at  DateTime @default(now()) @db.Timestamp(0)
   user        users @relation(fields: [userId], references: [id], onDelete: Cascade)

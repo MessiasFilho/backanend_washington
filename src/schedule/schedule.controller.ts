@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Req, Post, Request, Body, Res, HttpStatus, Delete } from "@nestjs/common";
+import { Controller, Get, UseGuards, Post, Request, Body, Res, HttpStatus, Delete, Put } from "@nestjs/common";
 import { Roles } from "src/decorators/role.decorator";
 import { role } from "src/enums/role.enum";
 import { AuthGuard } from "src/guard/auth.guard";
@@ -17,7 +17,7 @@ export class scheduleController {
     @Post('create')
     async agendar (@Request() req, @Body() body :scheduleDto, @Res() res  ){
        const agenda = await this.schedduleSevice.createSchedule(body, req.user)
-       if (!agenda.created){
+       if (!agenda.status){
             return res.status(HttpStatus.BAD_REQUEST).json({error: agenda.message})
        }
          return res.status(HttpStatus.CREATED).json({message: agenda.message})
@@ -35,10 +35,30 @@ export class scheduleController {
     async deleteAgenda( @ParamIdcuston() id: number, @Request() req, @Res() res  ){
         const agenda = await this.schedduleSevice.deleteSchedule(id, req.user)
 
-        if (!agenda.created){
+        if (!agenda.status){
             return res.status(HttpStatus.BAD_REQUEST).json({error: agenda.message})
         }
         return res.status(HttpStatus.OK).json({message: agenda.message})
+    }
+
+    @Roles(role.admin)
+    @Delete('admdelete/:id')
+    async adminDelete(@ParamIdcuston() id, @Request() req, @Res() res){
+        const schedule = await this.schedduleSevice.deleteScheduleAdmin(id, req.user)
+        if (!schedule.status){
+            return res.status(HttpStatus.BAD_REQUEST).json({error: schedule.message})
+        }
+        return res.status(HttpStatus.OK).json({message: schedule.message})
+    }
+
+    @Roles(role.admin)
+    @Put('updateschedule/:id')
+    async updated(@ParamIdcuston() id, @Request() req, @Res() res){
+        const schedule = await this.schedduleSevice.deleteScheduleAdmin(id, req.user)
+        if (!schedule.status){
+            return res.status(HttpStatus.BAD_REQUEST).json({error: schedule.message})
+        }
+        return res.status(HttpStatus.OK).json({message: schedule.message})
     }
     
 }

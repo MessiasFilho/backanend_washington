@@ -5,7 +5,7 @@ import { isAfter, isBefore, parseISO, setHours, setMilliseconds, setMinutes, set
 import {  formatToTimeZone} from "date-fns-timezone" ;
 
 interface scheduleInterface {
-    created: boolean, 
+    status: boolean, 
     message: string
 }
 
@@ -26,11 +26,11 @@ export class scheduleSevice{
     }
 
     async getSchedule(id: number , user ): Promise<scheduleInterface>{
-        const agenda = await this.prisma.agenda.findFirst({
+         await this.prisma.agenda.findFirst({
             where: user.id , 
             include: user
         })
-        return {created: true, message:"success"}
+        return {status: true, message:"success"}
     }
 
     async createSchedule (schedule: scheduleDto, user){
@@ -39,14 +39,14 @@ export class scheduleSevice{
             
         try{
         if (isBefore( userDate, now )){
-            return {created: false, message: 'A data inserida e antes da data de hoje'}
+            return {status: false, message: 'A data inserida e antes da data de hoje'}
         }
         
         if (isBefore(userDate, startHour) ){
-           return {message:'funcionameto apois as 7:00',created: false}
+           return {message:'funcionameto apois as 7:00',status: false}
         }
         if (isAfter(userDate, endHour)){
-            return{message: 'funcionamento ate as 18 horas ', created: false}
+            return{message: 'funcionamento ate as 18 horas ', status: false}
         }
 
         const hInicial = new Date(date.getTime() - 2 * 60 * 60 * 1000) 
@@ -67,21 +67,73 @@ export class scheduleSevice{
             const diffInMilliseconds = Math.abs(agedDate.getTime() - dateparse.getTime())
             return  diffInMilliseconds < 7200000;
         })){
-            return {message: 'Cada compromisso deve ter um intervalo mínimo de 2 horas', created: false}
+            return {message: 'Cada compromisso deve ter um intervalo mínimo de 2 horas', status: false}
         }
 
         await this.prisma.agenda.create({
             data:{
                 userId: user.id, 
                 date: new Date(schedule.date), 
-                name: user.name
+                name: user.name,
+                email: user.email, 
+                fone: user.fone,
             }
     
         })
-        return {created: true , message: 'agenda criada'}
+        return {status: true , message: 'agenda criada'}
         }catch(error){
             console.log(error);    
-            return {created: false , message: 'Erro ao criar agenda'}
+            return {status: false , message: 'Erro ao criar agenda'}
+        }
+    }
+
+    async UpdatedSchedule(id: number, schedule: scheduleDto ){
+        const { userDate, startHour, endHour,  now, date} = this.agendaUtf(schedule)
+            
+        try{
+        if (isBefore( userDate, now )){
+            return {status: false, message: 'A data inserida e antes da data de hoje'}
+        }
+        
+        if (isBefore(userDate, startHour) ){
+           return {message:'funcionameto apois as 7:00',status: false}
+        }
+        if (isAfter(userDate, endHour)){
+            return{message: 'funcionamento ate as 18 horas ', status: false}
+        }
+
+        const hInicial = new Date(date.getTime() - 2 * 60 * 60 * 1000) 
+        const hFinal = new Date(date.getTime()  + 2 * 60 * 60 * 1000) 
+        
+        const conflict = await this.prisma.agenda.findMany({
+            where:{
+                date:{
+                    gte: hInicial, 
+                    lte: hFinal
+                }
+            }
+        })
+        
+        const dateparse = parseISO(schedule.date )
+        if (conflict.some(agenda => {
+            const agedDate = new Date(agenda.date)
+            const diffInMilliseconds = Math.abs(agedDate.getTime() - dateparse.getTime())
+            return  diffInMilliseconds < 7200000;
+        })){
+            return {message: 'Cada compromisso deve ter um intervalo mínimo de 2 horas', status: false}
+        }
+
+        await this.prisma.agenda.update({
+            where:{id},
+            data:{
+                date: new Date (schedule.date)
+            }
+
+        })
+        return {status: true , message: 'Agenda Atualizada'}
+        }catch(error){
+            console.log(error);    
+            return {status: false , message: 'Erro ao Atualizar agenda'}
         }
     }
 
@@ -93,12 +145,15 @@ export class scheduleSevice{
            })  
             const formatAgedList = agendaList.map(agenda =>{
             const zoneDate = formatToTimeZone( agenda.date, 'DD/MM/YYYY HH:mm:ss', {timeZone: 'America/Fortaleza'})
-            
+
             return {
-                id: agenda.id, 
-                name: agenda.name,
+                id:     agenda.id, 
+                name:   agenda.name,
+                email:  agenda.email, 
+                fone:   agenda.fone,
                 userId: agenda.userId,
-                date: zoneDate
+                date:   zoneDate, 
+                screated_at: formatToTimeZone(agenda.screated_at, 'DD/MM/YYYY HH:mm:s', {timeZone: 'America/Fortaleza'})
             }
         })
            return formatAgedList
@@ -111,18 +166,33 @@ export class scheduleSevice{
             })
 
             if (!agenda || (await agenda).userId !== user.id ){
-               return {created: false, message: 'Permição negada para deletar a agenda'}
+               return {status: false, message: 'Permição negada para deletar a agenda'}
             }
 
             await this.prisma.agenda.delete({
                 where: {id}
              })
-             return {message: 'Agenda deletada', created: true}
+             return {message: 'Agenda deletada', status: true}
         }catch(e){
             console.log(e);
-            return {created: false, message: 'erro ao deletar a egenda'}
+            return {status: false, message: 'erro ao deletar a egenda'}
             
         }
     }
+
+    async deleteScheduleAdmin(id: number, user): Promise<scheduleInterface>{
+           
+        try {
+            await this.prisma.agenda.delete({
+                where: {id}, 
+                
+            })
+            return { status: false, message: 'Agenda Deletada' }
+        }catch(e){
+            return {status: false, message: 'erro ao deletar a egenda'}
+        }
+    }
+
+
 
 }

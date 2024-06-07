@@ -10,6 +10,7 @@ import { Roles } from "src/decorators/role.decorator";
 import { role } from "src/enums/role.enum";
 import { RoleGuard } from "src/guard/role.guard";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { ParamIdcuston } from "src/decorators/param-id.decorator";
 
 @Controller('auth')
 export class AuthController {
@@ -46,6 +47,14 @@ export class AuthController {
     async showUsers (){
         return this.authservice.showUsers()
     }
+
+    @UseGuards(AuthGuard, RoleGuard)
+    @Roles(role.admin)
+    @Get('user')
+    async getUser(@ParamIdcuston() id ){
+        return await this.authservice.getUserId(id)
+    }
+
 
     @Post('forget')
     async forget(@Body() {email}: forgetDTO){
