@@ -169,7 +169,41 @@ export class AuthService {
         const user =  await this.prisma.users.findFirst({
             where: {id}
         })
-        return {data: user}
+        return user
+    }
+
+    async updateUser( id: number , {name,email,pessoa, cnpj ,fone,cpf, role} : registerDTO ):Promise <userInterface> {
+       
+        
+            try{
+                 await this.prisma.users.updateMany({
+                    where: {id}, 
+                    data:{
+                        name, 
+                        email,
+                        pessoa,
+                        cnpj: cnpj === '' ? null : cnpj, 
+                        fone,
+                        cpf: cpf === '' ? null : cpf,   
+                        role,
+                    }
+                })
+                return {statusUser: true, message:  'Usuario Atulizado'}
+            }catch(e){
+                return {statusUser: false, message:  'Error ao Atualizar usuario '}
+                }
+    }
+
+    async DeleteUser (id: number ): Promise <userInterface>{
+        try{
+             await this.prisma.users.delete({
+            where:{id}
+        })
+            return {statusUser: true, message:  'Usuario Deletado'}
+        }catch(e){
+            return {statusUser: true, message:  'Error Deletar usuario'}
+        }
+       
     }
 
 }

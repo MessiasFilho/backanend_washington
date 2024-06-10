@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Headers, Request, Res,  UseGuards, HttpException, HttpStatus, Delete, Param, ParseIntPipe, UseInterceptors, UploadedFile } from "@nestjs/common";
+import { Body, Controller, Post, Get, Headers, Request, Res,  UseGuards,Put, HttpException, HttpStatus, Delete, Param, ParseIntPipe, UseInterceptors, UploadedFile } from "@nestjs/common";
 import { loginDto } from "./dto/auth-login-dto";
 import { registerDTO } from "./dto/auth-register-dto";
 import { forgetDTO } from "./dto/auth-forget-dto";
@@ -11,6 +11,7 @@ import { role } from "src/enums/role.enum";
 import { RoleGuard } from "src/guard/role.guard";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ParamIdcuston } from "src/decorators/param-id.decorator";
+import { error } from "console";
 
 @Controller('auth')
 export class AuthController {
@@ -50,10 +51,35 @@ export class AuthController {
 
     @UseGuards(AuthGuard, RoleGuard)
     @Roles(role.admin)
-    @Get('user')
+    @Get('user/:id')
     async getUser(@ParamIdcuston() id ){
         return await this.authservice.getUserId(id)
     }
+
+    @UseGuards(AuthGuard, RoleGuard)
+    @Roles(role.admin)
+    @Delete('delete/:id')
+    async DeleteUser(@ParamIdcuston() id, @Res() res ){
+        const deluser = await this.authservice.DeleteUser(id)
+        if (!deluser.statusUser){
+            return res.status(HttpStatus.BAD_REQUEST).json({error: deluser.message,})
+        }
+        return res.status(HttpStatus.OK).json({message: deluser.message})
+    }
+
+    @UseGuards(AuthGuard, RoleGuard)
+    @Roles(role.admin)
+    @Put('update/:id')
+    async updateUser (@ParamIdcuston() id, @Body() user , @Res() res ){
+       
+        const upUser = await this.authservice.updateUser(id, user)
+
+        if(!upUser.statusUser){
+            return res.status(HttpStatus.BAD_REQUEST).json({message: upUser.message})
+        }
+        return res.status(HttpStatus.OK).json({message: upUser.message})
+    }
+
 
 
     @Post('forget')
@@ -82,6 +108,7 @@ export class AuthController {
     async UploadFoto(@userDecorator() user, @UploadedFile() photho: Express.Multer.File){
         return  {img: photho ,users: user }
     }
+
 
 
 }
