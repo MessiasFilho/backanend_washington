@@ -69,7 +69,7 @@ export class AuthController {
 
     @UseGuards(AuthGuard, RoleGuard)
     @Roles(role.admin)
-    @Put('update/:id')
+    @Put('updated/:id')
     async updateUser (@ParamIdcuston() id, @Body() user , @Res() res ){
        
         const upUser = await this.authservice.updateUser(id, user)

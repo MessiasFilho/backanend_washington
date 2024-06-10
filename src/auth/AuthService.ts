@@ -172,11 +172,10 @@ export class AuthService {
         return user
     }
 
-    async updateUser( id: number , {name,email,pessoa, cnpj ,fone,cpf, role} : registerDTO ):Promise <userInterface> {
-       
-        
+    async updateUser( id: number , {name,email,pessoa, cnpj ,fone,cpf} : registerDTO ):Promise <userInterface> {
+
             try{
-                 await this.prisma.users.updateMany({
+                 await this.prisma.users.update({
                     where: {id}, 
                     data:{
                         name, 
@@ -185,7 +184,6 @@ export class AuthService {
                         cnpj: cnpj === '' ? null : cnpj, 
                         fone,
                         cpf: cpf === '' ? null : cpf,   
-                        role,
                     }
                 })
                 return {statusUser: true, message:  'Usuario Atulizado'}
