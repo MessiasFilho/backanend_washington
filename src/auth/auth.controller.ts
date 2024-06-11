@@ -12,10 +12,14 @@ import { RoleGuard } from "src/guard/role.guard";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ParamIdcuston } from "src/decorators/param-id.decorator";
 import { error } from "console";
+import { FileDTO } from "./dto/upload-dto";
+import { uploadService } from "src/upload/upload.service";
 
 @Controller('auth')
 export class AuthController {
-    constructor( private readonly authservice: AuthService){}
+    constructor( private readonly authservice: AuthService, 
+                 private readonly uploadSevice: uploadService
+    ){}
     
     @Post('login')
     async loginUser (@Body() {email, password}: loginDto, @Res() res) {
@@ -103,10 +107,13 @@ export class AuthController {
     
     @UseInterceptors(FileInterceptor('file'))
     @UseGuards(AuthGuard, RoleGuard)
-    @Roles(role.user)
+    @Roles(role.user, role.admin)
     @Post('photo')
-    async UploadFoto(@userDecorator() user, @UploadedFile() photho: Express.Multer.File){
-        return  {img: photho ,users: user }
+    async UploadFoto(@userDecorator() user, @UploadedFile() photho: FileDTO ){
+        
+        const result = this.uploadSevice.upload(photho)
+        return result
+        
     }
 
 

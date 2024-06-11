@@ -7,6 +7,7 @@ import { scheduleModule } from './schedule/schedule.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { uploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -17,7 +18,9 @@ import { ConfigModule } from '@nestjs/config';
     }]),
     userModule, 
     AuthModule, 
-    scheduleModule,],
+    scheduleModule,
+    uploadModule,
+  ],
 
   controllers: [AppController],
   providers: [AppService , {
