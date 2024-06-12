@@ -110,6 +110,7 @@ export class AuthController {
     @Roles(role.user, role.admin)
     @Post('photo')
     async UploadFoto(@userDecorator() user, @UploadedFile() photho: FileDTO ){
+        console.log('oi');
         
         const result = this.uploadSevice.upload(photho)
         return result
