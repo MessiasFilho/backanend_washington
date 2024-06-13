@@ -35,3 +35,17 @@ model Agenda {
   user        users @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, date])
 }
+
+model ImagesCollection{
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String @db.VarChar(191)
+  imgens Imagens[] 
+}
+
+model Imagens {
+  id          Int      @id @default(autoincrement())
+  url         String
+  collection  ImagesCollection? @relation(fields: [collectionId], references: [id])
+  collectionId Int?
+}
