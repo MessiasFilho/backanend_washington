@@ -105,17 +105,7 @@ export class AuthController {
         return {roles: user, data:'oi'}
     }
     
-    @UseInterceptors(FileInterceptor('file'))
-    @UseGuards(AuthGuard, RoleGuard)
-    @Roles(role.user, role.admin)
-    @Post('photo')
-    async UploadFoto(@userDecorator() user, @UploadedFile() photho: FileDTO ){
-        console.log('oi');
-        
-        const result = this.uploadSevice.upload(photho)
-        return result
-        
-    }
+   
 
 
 
