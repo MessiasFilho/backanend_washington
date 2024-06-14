@@ -18,6 +18,8 @@ export class uploadController{
 
     @Post('photo')
     async UploadFoto(@userDecorator() user, @UploadedFile() photho: Express.Multer.File, @Body() title  ){
+        console.log({imagem: photho, title});
+        
         return {imagem: photho, title }
     }
 
