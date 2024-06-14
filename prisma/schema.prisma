@@ -40,6 +40,8 @@ model ImagesCollection{
   id          Int       @id @default(autoincrement())
   title       String
   description String @db.VarChar(191)
+  url         String 
+  
   imgens Imagens[] 
 }
 
