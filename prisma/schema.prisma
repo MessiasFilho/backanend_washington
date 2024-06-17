@@ -53,6 +53,6 @@ model ImagesCollection{
 model Imagens {
   id          Int      @id @default(autoincrement())
   url         String
-  collection  ImagesCollection? @relation(fields: [collectionId], references: [id])
-  collectionId Int?
+  collection  ImagesCollection? @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId Int
 }

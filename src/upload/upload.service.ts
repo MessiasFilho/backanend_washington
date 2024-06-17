@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import Jimp from "jimp";
 import { prismaService } from "src/prisma/prisma.service";
 import { uploadDto } from "./dto/upload_dto";
+import * as Multer from "multer";
 
 export interface uploadInterface {
     message : string, 
@@ -15,6 +16,7 @@ export interface uploadInterface {
 @Injectable()
 export class uploadService{
     private supabase: any
+  
     constructor(private readonly prisma: prismaService){
         const supaURL = 'https://betspnbiptymziiuszpv.supabase.co'
         const supaKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJldHNwbmJpcHR5bXppaXVzenB2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxODEzMTE4NSwiZXhwIjoyMDMzNzA3MTg1fQ._bTAusdYDE3tggrf_GfgX3wlNZn-_9mr9rC-9aAM5b4'
@@ -66,31 +68,30 @@ export class uploadService{
     }
 
     async uploadImigs( id: number, files: Express.Multer.File[] ): Promise <uploadInterface>{
-
-        for (const file of files){
-            try{
+        try{
+            const uploadedImages: { url: string }[] = [];
+         for (const file of files){
+           
                 const uniqueName = this.generateUniqueName();
-                const img = await Jimp.read(file.buffer);
-                const buffer = await img.getBufferAsync(Jimp.MIME_PNG);
+                // const img = await Jimp.read(file.buffer);
+                // const buffer = await img.getBufferAsync(Jimp.MIME_PNG);
                 
-                const { error } = await this.supabase.storage.from('storageWashington').upload(uniqueName, buffer, { upsert: true });
+                const { error, data } = await this.supabase.storage.from('storageWashington').upload(uniqueName, file.buffer, { upsert: true });
                 if (error) {
                   return {status: false, message: 'erro upload storage', id: null}
+                }                     
+                uploadedImages.push({url: `https://betspnbiptymziiuszpv.supabase.co/storage/v1/object/public/storageWashington/${uniqueName}`}) 
                 }
-                const url = `https://betspnbiptymziiuszpv.supabase.co/storage/v1/object/public/storageWashington/${uniqueName}`
-               
-                await this.prisma.imagens.create({
-                    data: {
-                        url: url,
-                        collectionId: id
-                    },
-                });
-
-                return {status: true, message: 'pagina criada com sucesso', id: null}
-
+                await this.prisma.imagens.createMany({
+                   data: uploadedImages.map((imagens) =>({
+                    url: imagens.url, 
+                    collectionId: id
+                   }))
+               });
+         
             }catch(e){
                 return {status:false , message: 'error images', id: null}
             }
-        }
+            return {status: true, message: 'pagina criada com sucesso', id: null}
     }
 }

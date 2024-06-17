@@ -23,20 +23,21 @@ export class uploadController{
        
         const upload = await this.uploadService.upload(photho, infpage )
         if (!upload.status){
-            res.status(HttpStatus.BAD_REQUEST).josn({error: upload.message})
+            res.status(HttpStatus.BAD_REQUEST).json({error: upload.message})
         }
         return res.status(HttpStatus.OK).json({message: upload.message, id: upload.id, status: upload.status})
-
 
     }
 
     @UseInterceptors(FilesInterceptor('files'))
     @Post('photos')
-    async uploadphotos(@UploadedFiles() phothos: Array<Express.Multer.File>, @Body('id') id: string ) {
-        const valor = JSON.parse(id)
-        console.log( valor );
-         
-       
+    async uploadphotos(@UploadedFiles() phothos: Array<Express.Multer.File>, @Body('id') id: string, @Res() res ) {
+        const idimg = JSON.parse(id)
+        const imagens = await this.uploadService.uploadImigs( idimg, phothos )
+        if(!imagens.status){
+            return res.status(HttpStatus.BAD_REQUEST).json({error:imagens.message})
+        }
+        return res.status(HttpStatus.OK).json({message:imagens.message})
     }
 
 
