@@ -37,11 +37,16 @@ model Agenda {
 }
 
 model ImagesCollection{
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String @db.VarChar(191)
+  id          Int        @id @default(autoincrement())
+  title       String     @db.VarChar(191)
+  metros      String     @db.VarChar(191)
+  aluguel     String?    @db.VarChar(191)
+  venda       String?    @db.VarChar(191)
+  andar       String     @db.VarChar(191)
+  sala        String     @db.VarChar(191)  
+  telefone    String     @db.VarChar(191)
+  description String?    @db.VarChar(191)
   url         String 
-  
   imgens Imagens[] 
 }
 
