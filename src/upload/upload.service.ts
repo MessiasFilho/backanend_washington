@@ -2,16 +2,25 @@ import { Injectable } from "@nestjs/common";
 import { FileDTO } from "src/auth/dto/upload-dto";
 import { createClient } from "@supabase/supabase-js"; 
 import { v4 as uuidv4 } from 'uuid';
-import Jimp from "jimp";
+import * as Jimp from 'jimp';
 import { prismaService } from "src/prisma/prisma.service";
 import { uploadDto } from "./dto/upload_dto";
 import * as Multer from "multer";
+import { promises } from "dns";
 
 export interface uploadInterface {
     message : string, 
     id: number,
     status: boolean, 
 }
+
+interface CompressedImage {
+    originalname: string;
+    filename: string;
+    buffer: string;
+    mimeType: string;
+    size: number;
+  }
 
 @Injectable()
 export class uploadService{
@@ -26,7 +35,7 @@ export class uploadService{
     private generateUniqueName(): string {
         const uniqueId = uuidv4();
         return `${uniqueId}.png`;
-      }
+    }
 
     async upload( File:FileDTO, {title, aluguel, andar, descricao, metros, sala, telefone, venda}: uploadDto): Promise <uploadInterface> {
        
@@ -73,9 +82,7 @@ export class uploadService{
          for (const file of files){
            
                 const uniqueName = this.generateUniqueName();
-                // const img = await Jimp.read(file.buffer);
-                // const buffer = await img.getBufferAsync(Jimp.MIME_PNG);
-                
+               
                 const { error, data } = await this.supabase.storage.from('storageWashington').upload(uniqueName, file.buffer, { upsert: true });
                 if (error) {
                   return {status: false, message: 'erro upload storage', id: null}
@@ -93,5 +100,30 @@ export class uploadService{
                 return {status:false , message: 'error images', id: null}
             }
             return {status: true, message: 'pagina criada com sucesso', id: null}
+    }
+
+
+    async compactImages (photos: Express.Multer.File[] ): Promise<CompressedImage[]>{
+
+        const processFilers = []
+
+        for (const photo of photos  ){
+            
+            const imagem = await Jimp.read(photo.path)
+            
+            await imagem.resize(1920, Jimp.AUTO).quality(80)
+
+            const buffer = await imagem.getBufferAsync(Jimp.MIME_JPEG);
+
+            processFilers.push({
+                originalname: photo.originalname,
+                filename: photo.filename,
+                buffer: buffer.toString('base64'),
+                mimeType: Jimp.MIME_JPEG,
+                size: buffer.length,
+            })
+
+        }
+        return processFilers
     }
 }

@@ -1,13 +1,10 @@
-import { Body, Controller, HttpStatus, Post, Res, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
+import { BadRequestException, Body, Controller, HttpStatus, Post, Res, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { Roles } from "src/decorators/role.decorator";
 import { role } from "src/enums/role.enum";
 import { AuthGuard } from "src/guard/auth.guard";
 import { RoleGuard } from "src/guard/role.guard";
 import { uploadService } from "./upload.service";
-import { ParamIdcuston } from "src/decorators/param-id.decorator";
-
-
 
 @UseGuards(AuthGuard, RoleGuard)
 @Roles(role.admin)
@@ -23,23 +20,25 @@ export class uploadController{
        
         const upload = await this.uploadService.upload(photho, infpage )
         if (!upload.status){
-            res.status(HttpStatus.BAD_REQUEST).json({error: upload.message})
+            res.status(HttpStatus.BAD_REQUEST).josn({error: upload.message})
         }
         return res.status(HttpStatus.OK).json({message: upload.message, id: upload.id, status: upload.status})
 
     }
 
-    @UseInterceptors(FilesInterceptor('files'))
+    @UseInterceptors(FilesInterceptor('files',10,{
+        fileFilter(req, file, callback) {
+            if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)){
+                return callback(new BadRequestException('Unsupported file type'), false);
+            }
+            callback(null, true);
+        },
+    }))
     @Post('photos')
-    async uploadphotos(@UploadedFiles() phothos: Array<Express.Multer.File>, @Body('id') id: string, @Res() res ) {
-        const idimg = JSON.parse(id)
-        const imagens = await this.uploadService.uploadImigs( idimg, phothos )
-        if(!imagens.status){
-            return res.status(HttpStatus.BAD_REQUEST).json({error:imagens.message})
-        }
-        return res.status(HttpStatus.OK).json({message:imagens.message})
+    async uploadphotos(@UploadedFiles() phothos: Array<Express.Multer.File>, @Body('id') id: string ) {
+        const valor = JSON.parse(id)
+        console.log( valor );
+         
     }
-
-
 
 }
