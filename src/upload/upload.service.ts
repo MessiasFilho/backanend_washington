@@ -1,12 +1,11 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, HttpStatus, Inject, Injectable, Response } from "@nestjs/common";
 import { FileDTO } from "src/auth/dto/upload-dto";
-import { createClient } from "@supabase/supabase-js"; 
+import { SupabaseClient, createClient } from "@supabase/supabase-js"; 
 import { v4 as uuidv4 } from 'uuid';
 import * as Jimp from 'jimp';
 import { prismaService } from "src/prisma/prisma.service";
 import { uploadDto } from "./dto/upload_dto";
-import * as Multer from "multer";
-import { promises } from "dns";
+
 
 export interface uploadInterface {
     message : string, 
@@ -17,21 +16,17 @@ export interface uploadInterface {
 interface CompressedImage {
     originalname: string;
     filename: string;
-    buffer: string;
+    buffer: Buffer;
     mimeType: string;
     size: number;
   }
 
 @Injectable()
 export class uploadService{
-    private supabase: any
-  
-    constructor(private readonly prisma: prismaService){
-        const supaURL = 'https://betspnbiptymziiuszpv.supabase.co'
-        const supaKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJldHNwbmJpcHR5bXppaXVzenB2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxODEzMTE4NSwiZXhwIjoyMDMzNzA3MTg1fQ._bTAusdYDE3tggrf_GfgX3wlNZn-_9mr9rC-9aAM5b4'
-        this.supabase = createClient(supaURL, supaKey, {auth:{ persistSession: false}})
-        
-    }
+    constructor(private readonly prisma: prismaService, 
+        @Inject('SupabaseClient') private readonly supabase: SupabaseClient
+    ){}
+
     private generateUniqueName(): string {
         const uniqueId = uuidv4();
         return `${uniqueId}.png`;
@@ -40,9 +35,7 @@ export class uploadService{
     async upload( File:FileDTO, {title, aluguel, andar, descricao, metros, sala, telefone, venda}: uploadDto): Promise <uploadInterface> {
        
         const uniqueName = this.generateUniqueName()
-        
         try {
-           
             const img = await Jimp.read(File.buffer) 
             const buffer = await img.getBufferAsync(Jimp.MIME_PNG)
             
@@ -77,53 +70,50 @@ export class uploadService{
     }
 
     async uploadImigs( id: number, files: Express.Multer.File[] ): Promise <uploadInterface>{
-        try{
-            const uploadedImages: { url: string }[] = [];
-         for (const file of files){
-           
+        const uploadedImages: { url: string }[] = [];
+        try{    
+            
+            for (const file of files){
+                const image = await this.compactImages(file)
                 const uniqueName = this.generateUniqueName();
-               
-                const { error, data } = await this.supabase.storage.from('storageWashington').upload(uniqueName, file.buffer, { upsert: true });
+                
+                const { error } = await this.supabase.storage.from('storageWashington').upload(uniqueName, image.buffer, { upsert: true });
                 if (error) {
                   return {status: false, message: 'erro upload storage', id: null}
                 }                     
                 uploadedImages.push({url: `https://betspnbiptymziiuszpv.supabase.co/storage/v1/object/public/storageWashington/${uniqueName}`}) 
                 }
-                await this.prisma.imagens.createMany({
+                const imgs = await this.prisma.imagens.createMany({
                    data: uploadedImages.map((imagens) =>({
                     url: imagens.url, 
                     collectionId: id
                    }))
                });
+               if (!imgs){
+                    return {status:false , message: 'error image url', id: null}
+               }
          
+               return {status: true, message: 'pagina criada com sucesso', id: null}
+
             }catch(e){
-                return {status:false , message: 'error images', id: null}
+                console.error('Error processing images:', e);
+                return { status: false, message: 'Error processing images', id: null };
             }
-            return {status: true, message: 'pagina criada com sucesso', id: null}
     }
 
 
-    async compactImages (photos: Express.Multer.File[] ): Promise<CompressedImage[]>{
-
-        const processFilers = []
-
-        for (const photo of photos  ){
-            
-            const imagem = await Jimp.read(photo.path)
-            
-            await imagem.resize(1920, Jimp.AUTO).quality(80)
-
-            const buffer = await imagem.getBufferAsync(Jimp.MIME_JPEG);
-
-            processFilers.push({
+    async compactImages (photo: Express.Multer.File): Promise<CompressedImage>{
+            const image = await Jimp.read(photo.buffer);
+             
+            await image.resize(1920, Jimp.AUTO).quality(80);
+             const buffer = await image.getBufferAsync(Jimp.MIME_JPEG);
+        
+            return{
                 originalname: photo.originalname,
                 filename: photo.filename,
-                buffer: buffer.toString('base64'),
+                buffer: buffer,
                 mimeType: Jimp.MIME_JPEG,
                 size: buffer.length,
-            })
-
-        }
-        return processFilers
+            };
     }
 }

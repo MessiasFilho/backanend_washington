@@ -13,7 +13,6 @@ export class uploadController{
     constructor(private readonly uploadService: uploadService){}
 
     @UseInterceptors(FileInterceptor('file'))
-
     @Post('photo')
     async UploadFoto(@UploadedFile() photho: Express.Multer.File, @Body('inform')inf: string, @Res() res   ){
         const infpage = JSON.parse(inf)
@@ -35,10 +34,14 @@ export class uploadController{
         },
     }))
     @Post('photos')
-    async uploadphotos(@UploadedFiles() phothos: Array<Express.Multer.File>, @Body('id') id: string ) {
+    async uploadphotos(@UploadedFiles() phothos: Array<Express.Multer.File>, @Body('id') id: string, @Res() res ) {
         const valor = JSON.parse(id)
-        console.log( valor );
-         
+        const {status, message} = await this.uploadService.uploadImigs(valor, phothos)
+        if (!status){
+            res.status(HttpStatus.BAD_REQUEST).json({error: message})
+        }
+            return res.status(HttpStatus.OK).json({message: message})
+            
     }
 
 }

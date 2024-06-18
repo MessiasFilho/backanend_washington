@@ -8,6 +8,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { uploadModule } from './upload/upload.module';
+import { supabseModule } from './upload/supabase.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { uploadModule } from './upload/upload.module';
     AuthModule, 
     scheduleModule,
     uploadModule,
+    supabseModule,
   ],
 
   controllers: [AppController],
