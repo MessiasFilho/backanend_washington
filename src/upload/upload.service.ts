@@ -102,9 +102,7 @@ export class uploadService{
     }
 
     async showPosters(){
-         return this.prisma.imagesCollection.findMany({
-            include:{ imgens: true}
-        })
+         return this.prisma.imagesCollection.findMany()
     }
     
     async getPosterId(id: number){
