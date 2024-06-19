@@ -1,17 +1,18 @@
-import { BadRequestException, Body, Controller, HttpStatus, Post, Res, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, HttpStatus, Post, Res, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { Roles } from "src/decorators/role.decorator";
 import { role } from "src/enums/role.enum";
 import { AuthGuard } from "src/guard/auth.guard";
 import { RoleGuard } from "src/guard/role.guard";
 import { uploadService } from "./upload.service";
+import { ParamIdcuston } from "src/decorators/param-id.decorator";
 
-@UseGuards(AuthGuard, RoleGuard)
-@Roles(role.admin)
 @Controller('upload')
 export class uploadController{
     constructor(private readonly uploadService: uploadService){}
-
+    
+    @UseGuards(AuthGuard, RoleGuard)
+    @Roles(role.admin)
     @UseInterceptors(FileInterceptor('file'))
     @Post('photo')
     async UploadFoto(@UploadedFile() photho: Express.Multer.File, @Body('inform')inf: string, @Res() res   ){
@@ -25,6 +26,8 @@ export class uploadController{
 
     }
 
+    @UseGuards(AuthGuard, RoleGuard)
+    @Roles(role.admin)
     @UseInterceptors(FilesInterceptor('files',10,{
         fileFilter(req, file, callback) {
             if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)){
@@ -42,6 +45,17 @@ export class uploadController{
         }
             return res.status(HttpStatus.OK).json({message: message})
             
+    }
+
+
+    @Get('posters')
+    async showPosters(){
+        return this.uploadService.showPosters()
+    }
+
+    @Get('id')
+    async getPoster(@ParamIdcuston() id ){
+        return{teste: id}
     }
 
 }

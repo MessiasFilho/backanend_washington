@@ -9,7 +9,7 @@ import { uploadDto } from "./dto/upload_dto";
 
 export interface uploadInterface {
     message : string, 
-    id: number,
+    id: number | null,
     status: boolean, 
 }
 
@@ -101,6 +101,15 @@ export class uploadService{
             }
     }
 
+    async showPosters(){
+         return this.prisma.imagesCollection.findMany({
+            include:{ imgens: true}
+        })
+    }
+    
+    async getPosterId(id: number){
+        
+    }    
 
     async compactImages (photo: Express.Multer.File): Promise<CompressedImage>{
             const image = await Jimp.read(photo.buffer);
@@ -116,4 +125,6 @@ export class uploadService{
                 size: buffer.length,
             };
     }
+
+
 }
