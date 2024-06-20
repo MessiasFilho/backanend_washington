@@ -106,12 +106,16 @@ export class uploadService{
     }
     
     async getPosterId(id: number){
-        return this.prisma.imagesCollection.findFirst({
-            where: {id}, 
-            include: {imgens: true}
+        return this.prisma.imagesCollection.findFirst({ where: {id},})
+    } 
+    
+    async getImagens(id: number){
+        return this.prisma.imagens.findMany({
+            where:{
+                collectionId: id
+            }
         })
-        
-    }    
+    }
 
     async compactImages (photo: Express.Multer.File): Promise<CompressedImage>{
             const image = await Jimp.read(photo.buffer);

@@ -47,15 +47,19 @@ export class uploadController{
             
     }
 
-
     @Get('posters')
     async showPosters(){
         return this.uploadService.showPosters()
     }
 
-    @Get('id')
+    @Get('poster/:id')
     async getPoster(@ParamIdcuston() id ){
-        return{teste: id}
+        return this.uploadService.getPosterId(id)
+    }
+
+    @Get('imgens/:id')
+    async getImagens(@ParamIdcuston() id ){
+        return this.uploadService.getImagens(id)
     }
 
 }
