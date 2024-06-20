@@ -106,6 +106,10 @@ export class uploadService{
     }
     
     async getPosterId(id: number){
+        return this.prisma.imagesCollection.findFirst({
+            where: {id}, 
+            include: {imgens: true}
+        })
         
     }    
 
