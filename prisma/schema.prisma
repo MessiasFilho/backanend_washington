@@ -47,6 +47,8 @@ model ImagesCollection{
   telefone    String     @db.VarChar(191)
   description String?    @db.VarChar(191)
   url         String 
+  screated_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @default(now()) @db.Timestamp(0)
   imgens Imagens[] 
 }
 
@@ -55,4 +57,13 @@ model Imagens {
   url         String
   collection  ImagesCollection? @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   collectionId Int
+}
+
+model notice {
+  id Int @id @default(autoincrement())
+  title String 
+  url   String
+  description String
+  screated_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @default(now()) @db.Timestamp(0)
 }

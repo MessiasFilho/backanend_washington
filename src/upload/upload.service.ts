@@ -65,7 +65,6 @@ export class uploadService{
         }catch(e){
             console.log(e);
             return
-            
         }
     }
 

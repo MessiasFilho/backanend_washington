@@ -9,6 +9,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { uploadModule } from './upload/upload.module';
 import { supabseModule } from './upload/supabase.module';
+import { noticeModule } from './notices/notice.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { supabseModule } from './upload/supabase.module';
     scheduleModule,
     uploadModule,
     supabseModule,
+    noticeModule,
   ],
 
   controllers: [AppController],
