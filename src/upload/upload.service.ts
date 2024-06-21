@@ -32,7 +32,7 @@ export class uploadService{
         return `${uniqueId}.png`;
     }
 
-    async upload( File:FileDTO, {title, aluguel, andar, descricao, metros, sala, telefone, venda}: uploadDto): Promise <uploadInterface> {
+    async upload( File:FileDTO, {title, aluguel, andar, description, metros, sala, telefone, venda}: uploadDto): Promise <uploadInterface> {
        
         const uniqueName = this.generateUniqueName()
         try {
@@ -56,7 +56,7 @@ export class uploadService{
                             telefone,
                             aluguel,
                             venda, 
-                            description: descricao
+                            description,
                         }
                      })
                     

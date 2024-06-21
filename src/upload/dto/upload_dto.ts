@@ -23,5 +23,5 @@ export class uploadDto {
     telefone: string 
     
     @IsString()
-    descricao: string 
+    description: string 
 }
